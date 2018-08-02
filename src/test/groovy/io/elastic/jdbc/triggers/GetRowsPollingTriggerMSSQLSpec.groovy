@@ -1,24 +1,29 @@
-package io.elastic.jdbc
+package io.elastic.jdbc.triggers
 
-import com.google.gson.JsonObject
+import javax.json.JsonObject
 import io.elastic.api.EventEmitter
 import io.elastic.api.EventEmitter.Callback
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
+
+import spock.lang.*
 
 import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class SelectTriggerMSSQLSpec extends Specification {
+class GetRowsPollingTriggerMSSQLSpec extends Specification {
 
-    @Shared def connectionString = ""
-    @Shared def user = ""
-    @Shared def password = ""
-    @Shared Connection connection
+    @Shared
+    def connectionString = ""
+    @Shared
+    def user = ""
+    @Shared
+    def password = ""
+    @Shared
+    def databaseName = ""
+    @Shared
+    Connection connection
 
     def setup() {
         connection = DriverManager.getConnection(connectionString, user, password)
@@ -27,10 +32,10 @@ class SelectTriggerMSSQLSpec extends Specification {
                 "  DROP TABLE stars;"
         connection.createStatement().execute(sql)
 
-        sql = "CREATE TABLE stars (ID int, name varchar(255) NOT NULL, radius int, destination float, birth DATETIME)"
+        sql = "CREATE TABLE stars (ID int, name varchar(255) NOT NULL, radius int, destination float, createdat DATETIME)"
         connection.createStatement().execute(sql)
 
-        sql = "INSERT INTO stars (ID, name, radius, destination, birth) VALUES (1, 'Sun', 50, 170, '2015-05-26 14:08:38')"
+        sql = "INSERT INTO stars (ID, name, radius, destination, createdat) VALUES (1, 'Sun', 50, 170, '2018-06-14 10:00:00')"
         connection.createStatement().execute(sql)
     }
 
@@ -41,7 +46,7 @@ class SelectTriggerMSSQLSpec extends Specification {
         connection.close()
     }
 
-    def "make a SELECT request" () {
+    def "make a SELECT request"() {
 
         Callback errorCallback = Mock(Callback)
         Callback snapshotCallback = Mock(Callback)
@@ -54,30 +59,35 @@ class SelectTriggerMSSQLSpec extends Specification {
                 .onError(errorCallback)
                 .onRebound(onreboundCallback).build();
 
-        SelectTrigger selectAction = new SelectTrigger(emitter);
+        GetRowsPollingTrigger getRowsPollingTrigger = new GetRowsPollingTrigger(emitter);
 
         given:
         Message msg = new Message.Builder().build();
 
-        JsonObject config = new JsonObject()
-        config.addProperty("orderField", "name")
-        config.addProperty("tableName", "stars")
+        JsonObject config = Json.createObjectBuilder().build()
+        config.addProperty("pollingField", "createdat")
+        config.addProperty("pollingValue", "2018-06-14 00:00:00")
         config.addProperty("user", user)
         config.addProperty("password", password)
         config.addProperty("dbEngine", "mssql")
         config.addProperty("host", "")
-        config.addProperty("databaseName", "")
+        config.addProperty("databaseName", databaseName)
+        config.addProperty("tableName", "stars")
 
-        JsonObject snapshot = new JsonObject()
+        JsonObject snapshot = Json.createObjectBuilder().build()
         snapshot.addProperty("skipNumber", 0)
 
         when:
         ExecutionParameters params = new ExecutionParameters(msg, config, snapshot)
-        selectAction.execute(params)
+        getRowsPollingTrigger.execute(params)
 
         then:
         0 * errorCallback.receive(_)
-        1 * dataCallback.receive({ it.toString() =='{"body":{"ID":"1","name":"Sun","radius":"50","destination":"170.0","birth":"2015-05-26 14:08:38.0","RowNum":"1"},"attachments":{}}' })
-        1 * snapshotCallback.receive({ it.toString() == '{"skipNumber":1,"tableName":"stars"}'})
+        1 * dataCallback.receive({
+            it.toString() == '{"body":{"ID":"1","name":"Sun","radius":"50","destination":"170.0","createdat":"2018-06-14 10:00:00.0","RowNum":"1"},"attachments":{}}'
+        })
+        1 * snapshotCallback.receive({
+            it.toString() == '{"skipNumber":1,"tableName":"stars","pollingField":"createdat","pollingValue":"2018-06-14 10:00:00.000"}'
+        })
     }
 }

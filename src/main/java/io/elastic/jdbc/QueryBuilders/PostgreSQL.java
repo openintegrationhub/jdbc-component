@@ -10,10 +10,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class Oracle extends Query {
+public class PostgreSQL extends Query {
 
   public ResultSet executeSelectQuery(Connection connection, String sqlQuery, JsonObject body) throws SQLException {
     PreparedStatement stmt = connection.prepareStatement(sqlQuery);
@@ -35,42 +33,58 @@ public class Oracle extends Query {
 
   public ResultSet executePolling(Connection connection) throws SQLException {
     validateQuery();
-    String sql = "SELECT * FROM " +
-        " (SELECT  b.*, rank() over (order by " + pollingField + ") as rnk FROM " +
-        tableName + " b) WHERE " + pollingField + " > ?" +
-        " AND rnk BETWEEN ? AND ?" +
-        " ORDER BY " + pollingField;
+    String sql = "WITH results_cte AS" +
+        "(" +
+        "    SELECT" +
+        "        *," +
+        "        ROW_NUMBER() OVER (ORDER BY " + pollingField + ") AS rownum" +
+        "    FROM " + tableName +
+        "    WHERE " + pollingField + " > ?" +
+        " )" +
+        " SELECT *" +
+        " FROM results_cte" +
+        " WHERE rownum > ?" +
+        " AND rownum < ?";
     PreparedStatement stmt = connection.prepareStatement(sql);
-
-    /* data types mapping https://docs.oracle.com/cd/B19306_01/java.102/b14188/datamap.htm */
     stmt.setTimestamp(1, pollingValue);
     stmt.setInt(2, skipNumber);
-    stmt.setInt(3, countNumber);
+    stmt.setInt(3, countNumber + skipNumber);
     return stmt.executeQuery();
   }
 
   public ResultSet executeLookup(Connection connection, JsonObject body) throws SQLException {
     validateQuery();
-    String sql = "SELECT * FROM " +
-        "(SELECT  b.*, rank() OVER (ORDER BY " + lookupField + ") AS rnk FROM " +
-        tableName + " b) WHERE " + lookupField + " = ? " +
-        "AND rnk BETWEEN ? AND ? " +
-        "ORDER BY " + lookupField;
+    String sql = "WITH results_cte AS" +
+        "(" +
+        "    SELECT" +
+        "        *," +
+        "        ROW_NUMBER() OVER (ORDER BY " + lookupField + ") AS rownum" +
+        "    FROM " + tableName +
+        "    WHERE " + lookupField + " = ?" +
+        " )" +
+        " SELECT *" +
+        " FROM results_cte" +
+        " WHERE rownum > ?" +
+        " AND rownum < ?";
     PreparedStatement stmt = connection.prepareStatement(sql);
+    //stmt.setString(1, lookupValue);
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
       Utils.setStatementParam(stmt, 1, entry.getKey(), entry.getValue().toString());
     }
     stmt.setInt(2, skipNumber);
-    stmt.setInt(3, countNumber);
+    stmt.setInt(3, countNumber + skipNumber);
     return stmt.executeQuery();
   }
 
   public int executeDelete(Connection connection, JsonObject body) throws SQLException {
+    validateQuery();
     String sql = "DELETE" +
         " FROM " + tableName +
         " WHERE " + lookupField + " = ?";
     PreparedStatement stmt = connection.prepareStatement(sql);
-    stmt.setString(1, lookupValue);
+    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+      Utils.setStatementParam(stmt, 1, entry.getKey(), entry.getValue().toString());
+    }
     return stmt.executeUpdate();
   }
 
@@ -135,5 +149,4 @@ public class Oracle extends Query {
     Utils.setStatementParam(stmt, i, idColumn, idValue);
     stmt.execute();
   }
-
 }

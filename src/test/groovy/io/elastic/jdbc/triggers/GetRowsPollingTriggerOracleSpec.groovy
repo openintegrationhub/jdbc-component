@@ -1,24 +1,27 @@
-package io.elastic.jdbc
+package io.elastic.jdbc.triggers
 
-import com.google.gson.JsonObject
+import javax.json.JsonObject
 import io.elastic.api.EventEmitter
 import io.elastic.api.EventEmitter.Callback
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
+
+import spock.lang.*
 
 import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class SelectTriggerOracleSpec extends Specification {
+class GetRowsPollingTriggerOracleSpec extends Specification {
 
-    @Shared def connectionString = ""
-    @Shared def user = ""
-    @Shared def password = ""
-    @Shared Connection connection
+    @Shared
+    def connectionString = ""
+    @Shared
+    def user = ""
+    @Shared
+    def password = ""
+    @Shared
+    Connection connection
 
     def setup() {
         connection = DriverManager.getConnection(connectionString, user, password)
@@ -33,10 +36,10 @@ class SelectTriggerOracleSpec extends Specification {
                 "END;"
         connection.createStatement().execute(sql)
 
-        sql = "CREATE TABLE stars (ID number, name varchar(255) NOT NULL, radius number, destination float)"
+        sql = "CREATE TABLE stars (ID number, name varchar(255) NOT NULL, radius number, destination float, createdat date)"
         connection.createStatement().execute(sql)
 
-        sql = "INSERT INTO stars (ID, name, radius, destination) VALUES (1, 'Sun', 50, 170)"
+        sql = "INSERT INTO stars (ID, name, radius, destination, createdat) VALUES (1, 'Sun', 50, 170, TO_DATE('2018-06-14 10:00:00', 'yyyy-mm-dd hh24:mi:ss'))"
         connection.createStatement().execute(sql)
     }
 
@@ -44,7 +47,7 @@ class SelectTriggerOracleSpec extends Specification {
         connection.close();
     }
 
-    def "make a SELECT request" () {
+    def "make a SELECT request"() {
 
         Callback errorCallback = Mock(Callback)
         Callback snapshotCallback = Mock(Callback)
@@ -57,30 +60,35 @@ class SelectTriggerOracleSpec extends Specification {
                 .onError(errorCallback)
                 .onRebound(onreboundCallback).build();
 
-        SelectTrigger selectAction = new SelectTrigger(emitter);
+        GetRowsPollingTrigger getRowsPollingTrigger = new GetRowsPollingTrigger(emitter);
 
         given:
         Message msg = new Message.Builder().build();
 
-        JsonObject config = new JsonObject()
-        config.addProperty("orderField", "name")
+        JsonObject config = Json.createObjectBuilder().build()
+        config.addProperty("pollingField", "createdat")
+        config.addProperty("pollingValue", "2018-06-14 00:00:00")
         config.addProperty("user", user)
         config.addProperty("password", password)
         config.addProperty("dbEngine", "oracle")
         config.addProperty("host", "")
-        config.addProperty("databaseName", "ORCL")
+        config.addProperty("databaseName", "")
         config.addProperty("tableName", "stars")
 
-        JsonObject snapshot = new JsonObject()
+        JsonObject snapshot = Json.createObjectBuilder().build()
         snapshot.addProperty("skipNumber", 0)
 
         when:
         ExecutionParameters params = new ExecutionParameters(msg, config, snapshot)
-        selectAction.execute(params)
+        getRowsPollingTrigger.execute(params)
 
         then:
         0 * errorCallback.receive(_)
-        1 * dataCallback.receive({ it.toString() =='{"body":{"ID":"1","NAME":"Sun","RADIUS":"50","DESTINATION":"170","RNK":"1"},"attachments":{}}' })
-        1 * snapshotCallback.receive({ it.toString() == '{"skipNumber":1,"tableName":"stars"}'})
+        1 * dataCallback.receive({
+            it.toString() == '{"body":{"ID":"1","NAME":"Sun","RADIUS":"50","DESTINATION":"170","CREATEDAT":"2018-06-14 10:00:00.0","RNK":"1"},"attachments":{}}'
+        })
+        1 * snapshotCallback.receive({
+            it.toString() == '{"skipNumber":1,"tableName":"stars","pollingField":"createdat","pollingValue":"2018-06-14 10:00:00.000"}'
+        })
     }
 }
