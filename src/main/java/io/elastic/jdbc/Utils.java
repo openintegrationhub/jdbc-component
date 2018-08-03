@@ -36,7 +36,7 @@ public class Utils {
   public static final String CFG_HOST = "host";
   public static final String CFG_USER = "user";
   public static Map<String, String> columnTypes = null;
-  public static final String VARS_REGEXP = "@([\\w_$][\\d\\w_$]*(:(string|boolean|date|number|bigint|float|real|money))?)";
+  public static final String VARS_REGEXP = "@([\\w_$][\\d\\w_$]*(:(string|boolean|date|number|bigint|float|real))?)";
 
   public static Connection getConnection(final JsonObject config) {
     final String engine = getRequiredNonEmptyString(config, CFG_DB_ENGINE, "Engine is required")
@@ -100,18 +100,38 @@ public class Utils {
   }
 
   public static void setStatementParam(PreparedStatement statement, int paramNumber, String colName,
-      String colValue) throws SQLException {
+    String colValue) throws SQLException {
     try {
       if (isNumeric(colName)) {
-        statement.setBigDecimal(paramNumber, new BigDecimal(colValue));
+        if (colValue != "null") {
+          statement.setBigDecimal(paramNumber, new BigDecimal(colValue));
+        } else {
+          statement.setBigDecimal(paramNumber, null);
+        }
       } else if (isTimestamp(colName)) {
-        statement.setTimestamp(paramNumber, Timestamp.valueOf(colValue));
+        if (colValue != "null") {
+          statement.setTimestamp(paramNumber, Timestamp.valueOf(colValue));
+        } else {
+          statement.setTimestamp(paramNumber, null);
+        }
       } else if (isDate(colName)) {
-        statement.setDate(paramNumber, Date.valueOf(colValue));
+        if (colValue != "null") {
+          statement.setDate(paramNumber, Date.valueOf(colValue));
+        } else {
+          statement.setDate(paramNumber, null);
+        }
       } else if (isBoolean(colName)) {
-        statement.setBoolean(paramNumber, Boolean.valueOf(colValue));
+        if (colValue != "null") {
+          statement.setBoolean(paramNumber, Boolean.valueOf(colValue));
+        } else {
+          statement.setBoolean(paramNumber, false);
+        }
       } else {
-        statement.setString(paramNumber, colValue);
+        if (colValue != "null") {
+          statement.setString(paramNumber, colValue);
+        } else {
+          statement.setNull(paramNumber, Types.VARCHAR);
+        }
       }
     } catch (java.lang.NumberFormatException e) {
       String message = String
@@ -262,7 +282,8 @@ public class Utils {
           row.add(metaData.getColumnName(i), rs.getTimestamp(metaData.getColumnName(i)).toString());
           break;
         case Types.DATE:
-            row.add(metaData.getColumnName(i), (rs.getDate(metaData.getColumnName(i)) != null) ? rs.getDate(metaData.getColumnName(i)).toString() : "");
+          row.add(metaData.getColumnName(i), (rs.getDate(metaData.getColumnName(i)) != null) ? rs
+              .getDate(metaData.getColumnName(i)).toString() : "");
           break;
         case Types.TIME:
           row.add(metaData.getColumnName(i), rs.getTime(metaData.getColumnName(i)).toString());

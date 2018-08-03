@@ -53,7 +53,8 @@ Validation will start right after click on a Save button. You will be able to co
 ### SELECT
 You are able to provide SELECT query with last execution timestamp as WHERE clause criteria.
 ![image](https://user-images.githubusercontent.com/40201204/43591075-2a032dcc-967b-11e8-968d-851355c2646e.png)
-Before executing the statement %%EIO_LAST_POLL%% will be replaced with ISO Date of the last execution or max value of the last pooled datetime.
+Before executing the the statement %%EIO_LAST_POLL%% will be replaced with ISO Date of the last execution or max value of the last pooled datetime, for example ``2018-08-01T00:00:00.000``.
+During the first execution, date will be equal to ["start" of Unix Time](https://en.wikipedia.org/wiki/Unix_time) - ``1970-01-01 00:00:00.000``.
 Precision of the polling clause can be till milliseconds.
 The format of ``Start Polling From (optional)`` field should be like ``yyyy-mm-dd hh:mi:ss[.sss]``, where
 - ``yyyy`` - year
@@ -66,9 +67,10 @@ The format of ``Start Polling From (optional)`` field should be like ``yyyy-mm-d
 ### GET ROWS POLLING
 This trigger can polling data from provided table. As WHERE clause you can use column, which has datatype like DATE or TIMESTAMP.
 ![image](https://user-images.githubusercontent.com/40201204/43591332-c99f6b3e-967b-11e8-8a77-bf8386e83d51.png)
-Before executing the clause for specified column will be replaced with ISO Date of the last execution or max value of the last pooled datetime.
+Before executing the the statement %%EIO_LAST_POLL%% will be replaced with ISO Date of the last execution or max value of the last pooled datetime, for example ``2018-08-01T00:00:00.000``.
+During the first execution, date will be equal to ["start" of Unix Time](https://en.wikipedia.org/wiki/Unix_time) - ``1970-01-01 00:00:00.000``.
 Precision of the polling clause can be till milliseconds.
-The format of cStart Polling From (optional)`` field should be like ``yyyy-mm-dd hh:mi:ss[.sss]``, where
+The format of ``Start Polling From (optional)`` field should be like ``yyyy-mm-dd hh:mi:ss[.sss]``, where
 - ``yyyy`` - year
 - ``mm`` - month
 - ``dd`` - day
@@ -79,30 +81,64 @@ The format of cStart Polling From (optional)`` field should be like ``yyyy-mm-dd
 ## Actions
 ### SELECT
 ![image](https://user-images.githubusercontent.com/40201204/43592439-39ec5738-967e-11e8-8632-3655b08982d3.png)
-The action will build an [SQL](https://en.wikipedia.org/wiki/SQL "SQL") query that can return multiple results, it has limitations on the query and suited only for SELECT type of queries.
+The action will execute an [SQL](https://en.wikipedia.org/wiki/SQL "SQL") query that can return multiple results, it has limitations on the query and suited only for SELECT type of queries.
+In SQL query you can use clause variables with specific data types. 
+Internally we use prepared statements, so all incoming data is
+validated against SQL injection, however we had to build a connection from JavaScript types to the SQL data types
+therefore when doing a prepared statements, you would need to add ``:type`` to **each prepared statement variable**.
+
+For example if you have a following SQL statement:
+
+```sql
+SELECT
+FROM users
+WHERE userid = @id AND language = @lang
+```
+
+you should add ``:type`` to each ``@parameter`` so your SQL query will looks like this:
+
+```sql
+SELECT
+FROM users
+WHERE userid = @id:number AND language = @lang:string
+```
+
+Following types are supported:
+ * ``string``
+ * ``number``
+ * ``bigint``
+ * ``boolean``
+ * ``float``
+ * ``date``
+
+![image](https://user-images.githubusercontent.com/40201204/43644974-332f2aa4-9739-11e8-8483-f7395e5d195d.png)
+
+Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty response, otherwise you will get an error on empty response.
+ 
 #### Input fields description
+Component supports dynamic incoming metadata - as soon as your query is in place it will be parsed and incoming metadata will be generated accordingly.
 
 ### LOOKUP BY PRIMARY KEY
 ![image](https://user-images.githubusercontent.com/40201204/43592505-5b6bbfe8-967e-11e8-845e-2ce8ac707357.png)
-The action will execute select query from a table from a ``Table`` dropdown field, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns only one result (a primary key is unique)
+The action will execute select query from a ``Table`` dropdown field, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns only one result (a primary key is unique).
+Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty response, otherwise you will get an error on empty response.
 #### Input fields description
+![image](https://user-images.githubusercontent.com/40201204/43644579-f593d1c8-9737-11e8-9b97-ee9e575a19f7.png)
+As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
 
 ### DELETE BY PRIMARY KEY
 ![image](https://user-images.githubusercontent.com/40201204/43592505-5b6bbfe8-967e-11e8-845e-2ce8ac707357.png)
+The action will execute delete query from a ``Table`` dropdown field, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns count of affected rows.
+Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty response, otherwise you will get an error on empty response.
 #### Input fields description
+![image](https://user-images.githubusercontent.com/40201204/43644579-f593d1c8-9737-11e8-9b97-ee9e575a19f7.png)
+As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
 
+## Known issues
+No known issues are there yet.
 
-<Brief description>
-#### Input fields description (if there is any)
-#### Input json schema location
-#### Output json schema location (if exists)
+## License
+Apache-2.0 © [elastic.io GmbH](https://www.elastic.io "elastic.io GmbH")
 
-<Brief description>
-### Input fields description (if there is any)
-### Input json schema location
-### Output json schema location (if exists)
-## Triggers (if any)
-### Trigger1
-### Trigger2
-## Additional info (if any)
 ## <System> API and Documentation links
+[elastic.io iPaaS Documentation](https://support.elastic.io/support/home "elastic.io iPaaS Documentation")

@@ -78,7 +78,7 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
           Integer isNullable = (rs.getObject("NULLABLE") != null) ? rs.getInt("NULLABLE") : 1;
           isRequired = isNullable == 0 && !isAutoincrement.equals("YES");
         } else {
-          isRequired = true;
+          isRequired = false;
         }
         field.add("required", isRequired)
             .add("title", name)

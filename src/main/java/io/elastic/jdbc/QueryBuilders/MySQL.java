@@ -19,7 +19,7 @@ public class MySQL extends Query {
     PreparedStatement stmt = connection.prepareStatement(sql.toString());
     int i = 1;
     for (Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), entry.getValue().toString().replace("\"", ""));
+      Utils.setStatementParam(stmt, i, entry.getKey(), (entry.getValue() != null) ? entry.getValue().toString().replace("\"", "") : null);
       i++;
     }
     return stmt.executeQuery();
