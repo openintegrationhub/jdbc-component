@@ -1,7 +1,6 @@
 package io.elastic.jdbc.QueryBuilders;
 
 import io.elastic.jdbc.Utils;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,24 +9,25 @@ import java.util.Map;
 import java.util.Map.Entry;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Oracle extends Query {
 
-  public ResultSet executeSelectQuery(Connection connection, String sqlQuery, JsonObject body) throws SQLException {
+  public ResultSet executeSelectQuery(Connection connection, String sqlQuery, JsonObject body)
+      throws SQLException {
     PreparedStatement stmt = connection.prepareStatement(sqlQuery);
     int i = 1;
     for (Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), entry.getValue().toString().replace("\"", ""));
+      Utils.setStatementParam(stmt, i, entry.getKey(),
+          entry.getValue().toString().replace("\"", ""));
       i++;
     }
     return stmt.executeQuery();
   }
 
-  public ResultSet executeSelectTrigger(Connection connection, String sqlQuery) throws SQLException {
+  public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)
+      throws SQLException {
     PreparedStatement stmt = connection.prepareStatement(sqlQuery);
-    if(pollingValue != null) {
+    if (pollingValue != null) {
       stmt.setTimestamp(1, pollingValue);
     }
     return stmt.executeQuery();

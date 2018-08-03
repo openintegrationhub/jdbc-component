@@ -6,14 +6,16 @@ import io.elastic.api.Module;
 import io.elastic.jdbc.QueryBuilders.Query;
 import io.elastic.jdbc.QueryFactory;
 import io.elastic.jdbc.Utils;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.*;
 
 public class SelectAction implements Module {
 
@@ -38,13 +40,13 @@ public class SelectAction implements Module {
 
     if (Utils.getNonNullString(configuration, PROPERTY_NULLABLE_RESULT).equals("true")) {
       nullableResult = true;
-    }
-    else if (Utils.getNonNullString(snapshot, PROPERTY_NULLABLE_RESULT).equals("true")) {
+    } else if (Utils.getNonNullString(snapshot, PROPERTY_NULLABLE_RESULT).equals("true")) {
       nullableResult = true;
     }
 
-    if (snapshot.get(PROPERTY_SKIP_NUMBER) != null)
+    if (snapshot.get(PROPERTY_SKIP_NUMBER) != null) {
       skipNumber = snapshot.getInt(PROPERTY_SKIP_NUMBER);
+    }
 
     Utils.columnTypes = Utils.getVariableTypes(sqlQuery);
     logger.info("Detected column types: " + Utils.columnTypes);
@@ -59,7 +61,7 @@ public class SelectAction implements Module {
       ResultSetMetaData metaData = rs.getMetaData();
       while (rs.next()) {
         logger.info("columns count: {} from {}", rowsCount, metaData.getColumnCount());
-        for(int i = 1; i <= metaData.getColumnCount(); i ++) {
+        for (int i = 1; i <= metaData.getColumnCount(); i++) {
           row = Utils.getColumnDataByType(rs, metaData, i, row);
         }
         rowsCount++;

@@ -1,13 +1,13 @@
 package io.elastic.jdbc;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 import io.elastic.api.DynamicMetadataProvider;
 import io.elastic.api.SelectModelProvider;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +54,7 @@ public class QueryColumnNamesProvider implements DynamicMetadataProvider, Select
         String name = result[0].substring(1);
         String type = result[1];
         field = Json.createObjectBuilder().add("title", name)
-                                          .add("type", type).build();
+            .add("type", type).build();
         properties = Json.createObjectBuilder().add(name, field).build();
         isEmpty = false;
       } while (matcher.find());

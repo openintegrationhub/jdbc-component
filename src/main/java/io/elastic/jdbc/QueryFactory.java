@@ -1,6 +1,10 @@
 package io.elastic.jdbc;
 
-import io.elastic.jdbc.QueryBuilders.*;
+import io.elastic.jdbc.QueryBuilders.MSSQL;
+import io.elastic.jdbc.QueryBuilders.MySQL;
+import io.elastic.jdbc.QueryBuilders.Oracle;
+import io.elastic.jdbc.QueryBuilders.PostgreSQL;
+import io.elastic.jdbc.QueryBuilders.Query;
 
 public class QueryFactory {
 

@@ -1,18 +1,17 @@
 package io.elastic.jdbc;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import io.elastic.api.SelectModelProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TableNameProvider implements SelectModelProvider {
 
@@ -82,7 +81,8 @@ public class TableNameProvider implements SelectModelProvider {
 
   private boolean isOracleServiceSchema(String schema) {
     List<String> schemas = Arrays
-        .asList("ANONYMOUS", "APEX_040000", "APEX_PUBLIC_USER", "MDSYS", "XDB", "XS$NULL", "APPQOSSYS", "CTXSYS", "DBSNMP", "DIP", "OUTLN", "RDSADMIN", "SYS", "SYSTEM");
+        .asList("ANONYMOUS", "APEX_040000", "APEX_PUBLIC_USER", "MDSYS", "XDB", "XS$NULL",
+            "APPQOSSYS", "CTXSYS", "DBSNMP", "DIP", "OUTLN", "RDSADMIN", "SYS", "SYSTEM");
     return schemas.indexOf(schema) > -1;
   }
 }

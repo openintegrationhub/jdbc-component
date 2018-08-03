@@ -68,7 +68,7 @@ This trigger can polling data from provided table. As WHERE clause you can use c
 ![image](https://user-images.githubusercontent.com/40201204/43591332-c99f6b3e-967b-11e8-8a77-bf8386e83d51.png)
 Before executing the clause for specified column will be replaced with ISO Date of the last execution or max value of the last pooled datetime.
 Precision of the polling clause can be till milliseconds.
-The format of ``Start Polling From (optional)`` field should be like ``yyyy-mm-dd hh:mi:ss[.sss]``, where
+The format of cStart Polling From (optional)`` field should be like ``yyyy-mm-dd hh:mi:ss[.sss]``, where
 - ``yyyy`` - year
 - ``mm`` - month
 - ``dd`` - day
@@ -79,11 +79,17 @@ The format of ``Start Polling From (optional)`` field should be like ``yyyy-mm-d
 ## Actions
 ### SELECT
 ![image](https://user-images.githubusercontent.com/40201204/43592439-39ec5738-967e-11e8-8632-3655b08982d3.png)
+The action will build an [SQL](https://en.wikipedia.org/wiki/SQL "SQL") query that can return multiple results, it has limitations on the query and suited only for SELECT type of queries.
+#### Input fields description
+
 ### LOOKUP BY PRIMARY KEY
 ![image](https://user-images.githubusercontent.com/40201204/43592505-5b6bbfe8-967e-11e8-845e-2ce8ac707357.png)
+The action will execute select query from a table from a ``Table`` dropdown field, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns only one result (a primary key is unique)
+#### Input fields description
+
 ### DELETE BY PRIMARY KEY
 ![image](https://user-images.githubusercontent.com/40201204/43592505-5b6bbfe8-967e-11e8-845e-2ce8ac707357.png)
-
+#### Input fields description
 
 
 <Brief description>

@@ -3,10 +3,14 @@ package io.elastic.jdbc.actions;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
 import io.elastic.api.Module;
+import io.elastic.jdbc.Engines;
 import io.elastic.jdbc.QueryBuilders.Query;
 import io.elastic.jdbc.QueryFactory;
 import io.elastic.jdbc.Utils;
-import io.elastic.jdbc.Engines;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -14,9 +18,6 @@ import javax.json.JsonString;
 import javax.json.JsonValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.*;
-import java.util.Map;
 
 public class DeleteRowByPrimaryKey implements Module {
 
@@ -46,30 +47,27 @@ public class DeleteRowByPrimaryKey implements Module {
     Boolean nullableResult = false;
     Integer rowsCount = 0;
 
-    if (configuration.containsKey(PROPERTY_TABLE_NAME) && Utils.getNonNullString(configuration, PROPERTY_TABLE_NAME).length() != 0) {
+    if (configuration.containsKey(PROPERTY_TABLE_NAME)
+        && Utils.getNonNullString(configuration, PROPERTY_TABLE_NAME).length() != 0) {
       tableName = configuration.getString(PROPERTY_TABLE_NAME);
-    }
-    else if (snapshot.containsKey(PROPERTY_TABLE_NAME) && Utils.getNonNullString(snapshot, PROPERTY_TABLE_NAME).length() != 0) {
+    } else if (snapshot.containsKey(PROPERTY_TABLE_NAME)
+        && Utils.getNonNullString(snapshot, PROPERTY_TABLE_NAME).length() != 0) {
       tableName = snapshot.getString(PROPERTY_TABLE_NAME);
-    }
-    else {
+    } else {
       throw new RuntimeException("Table name is required field");
     }
 
     if (Utils.getNonNullString(configuration, PROPERTY_DB_ENGINE).length() != 0) {
       dbEngine = configuration.getString(PROPERTY_DB_ENGINE);
-    }
-    else if (Utils.getNonNullString(snapshot, PROPERTY_DB_ENGINE).length() != 0) {
+    } else if (Utils.getNonNullString(snapshot, PROPERTY_DB_ENGINE).length() != 0) {
       dbEngine = snapshot.getString(PROPERTY_DB_ENGINE);
-    }
-    else {
+    } else {
       throw new RuntimeException("DB Engine is required field");
     }
 
     if (Utils.getNonNullString(configuration, PROPERTY_NULLABLE_RESULT).equals("true")) {
       nullableResult = true;
-    }
-    else if (Utils.getNonNullString(snapshot, PROPERTY_NULLABLE_RESULT).equals("true")) {
+    } else if (Utils.getNonNullString(snapshot, PROPERTY_NULLABLE_RESULT).equals("true")) {
       nullableResult = true;
     }
 
@@ -102,14 +100,14 @@ public class DeleteRowByPrimaryKey implements Module {
           }
         }
 
-        for(Map.Entry<String, JsonValue> entry : configuration.entrySet()) {
-          logger.info("Key = " + entry.getKey() + " Value = " + entry.getValue() );
+        for (Map.Entry<String, JsonValue> entry : configuration.entrySet()) {
+          logger.info("Key = " + entry.getKey() + " Value = " + entry.getValue());
         }
 
         if (rowsCount == 1) {
           int result = query.executeDelete(connection, body);
 
-          if(result == 1) {
+          if (result == 1) {
             row.add("result", result);
             logger.info("Emitting data");
             parameters.getEventEmitter().emitData(new Message.Builder().body(row.build()).build());
@@ -127,9 +125,9 @@ public class DeleteRowByPrimaryKey implements Module {
         }
 
         snapshot = Json.createObjectBuilder().add(PROPERTY_TABLE_NAME, tableName)
-                                             .add(PROPERTY_ID_COLUMN, primaryKey.toString())
-                                             .add(PROPERTY_LOOKUP_VALUE, primaryValue.toString())
-                                             .add(PROPERTY_NULLABLE_RESULT, nullableResult).build();
+            .add(PROPERTY_ID_COLUMN, primaryKey.toString())
+            .add(PROPERTY_LOOKUP_VALUE, primaryValue.toString())
+            .add(PROPERTY_NULLABLE_RESULT, nullableResult).build();
         logger.info("Emitting new snapshot {}", snapshot.toString());
         parameters.getEventEmitter().emitSnapshot(snapshot);
       } catch (SQLException e) {
@@ -151,8 +149,7 @@ public class DeleteRowByPrimaryKey implements Module {
           }
         }
       }
-    }
-    else {
+    } else {
       logger.error("Error: Should be one Primary Key");
       throw new IllegalStateException("Should be one Primary Key");
     }

@@ -1,13 +1,12 @@
 package io.elastic.jdbc;
 
-import javax.json.JsonObject;
 import io.elastic.api.CredentialsVerifier;
 import io.elastic.api.InvalidCredentialsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JdbcCredentialsVerifier implements CredentialsVerifier {
 

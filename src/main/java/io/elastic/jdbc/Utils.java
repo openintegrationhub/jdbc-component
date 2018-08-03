@@ -1,6 +1,19 @@
 package io.elastic.jdbc;
 
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.Date;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -11,11 +24,6 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigDecimal;
-import java.sql.*;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Utils {
 
@@ -72,13 +80,12 @@ public class Utils {
     Object value = "";
     try {
       Set<Entry<String, JsonValue>> kvPairs = config.entrySet();
-      for (Map.Entry<String, JsonValue> kvPair: kvPairs) {
+      for (Map.Entry<String, JsonValue> kvPair : kvPairs) {
         if (kvPair.getKey().equals(key)) {
           value = config.get(key);
         }
       }
-    }
-    catch (NullPointerException | ClassCastException e) {
+    } catch (NullPointerException | ClassCastException e) {
       logger.info("key {} doesn't have any mapping: {}", key, e);
     }
     return value.toString().replaceAll("\"", "");
@@ -94,16 +101,23 @@ public class Utils {
 
   public static void setStatementParam(PreparedStatement statement, int paramNumber, String colName,
       String colValue) throws SQLException {
-    if (isNumeric(colName)) {
-      statement.setBigDecimal(paramNumber, new BigDecimal(colValue));
-    } else if (isTimestamp(colName)) {
-      statement.setTimestamp(paramNumber, Timestamp.valueOf(colValue));
-    } else if (isDate(colName)) {
-      statement.setDate(paramNumber, Date.valueOf(colValue));
-    } else if (isBoolean(colName)) {
-      statement.setBoolean(paramNumber, Boolean.valueOf(colValue));
-    } else {
-      statement.setString(paramNumber, colValue);
+    try {
+      if (isNumeric(colName)) {
+        statement.setBigDecimal(paramNumber, new BigDecimal(colValue));
+      } else if (isTimestamp(colName)) {
+        statement.setTimestamp(paramNumber, Timestamp.valueOf(colValue));
+      } else if (isDate(colName)) {
+        statement.setDate(paramNumber, Date.valueOf(colValue));
+      } else if (isBoolean(colName)) {
+        statement.setBoolean(paramNumber, Boolean.valueOf(colValue));
+      } else {
+        statement.setString(paramNumber, colValue);
+      }
+    } catch (java.lang.NumberFormatException e) {
+      String message = String
+          .format("Provided data: %s can't be cast to the column %s datatype", colValue,
+              colName);
+      throw new RuntimeException(message);
     }
   }
 
@@ -194,7 +208,7 @@ public class Utils {
         String name = result[0].substring(1);
         String type = result[1];
         field = Json.createObjectBuilder().add("title", name)
-                                          .add("type", type).build();
+            .add("type", type).build();
         properties = Json.createObjectBuilder().add(name, field).build();
         columnTypes.put(name, type);
         isEmpty = false;
@@ -207,7 +221,8 @@ public class Utils {
     return columnTypes;
   }
 
-  public static JsonObjectBuilder getColumnDataByType(ResultSet rs, ResultSetMetaData metaData, int i, JsonObjectBuilder row) {
+  public static JsonObjectBuilder getColumnDataByType(ResultSet rs, ResultSetMetaData metaData,
+      int i, JsonObjectBuilder row) {
     try {
       switch (metaData.getColumnType(i)) {
         case Types.BOOLEAN:
@@ -247,7 +262,7 @@ public class Utils {
           row.add(metaData.getColumnName(i), rs.getTimestamp(metaData.getColumnName(i)).toString());
           break;
         case Types.DATE:
-          row.add(metaData.getColumnName(i), rs.getDate(metaData.getColumnName(i)).toString());
+            row.add(metaData.getColumnName(i), (rs.getDate(metaData.getColumnName(i)) != null) ? rs.getDate(metaData.getColumnName(i)).toString() : "");
           break;
         case Types.TIME:
           row.add(metaData.getColumnName(i), rs.getTime(metaData.getColumnName(i)).toString());
@@ -261,10 +276,10 @@ public class Utils {
           }
           break;
       }
-     } catch (SQLException e) {
-       logger.error("Failed to get data by type", e.toString());
-       throw new RuntimeException(e);
-     }
+    } catch (SQLException | java.lang.NullPointerException e) {
+      logger.error("Failed to get data by type", e.toString());
+      throw new RuntimeException(e);
+    }
     return row;
   }
 

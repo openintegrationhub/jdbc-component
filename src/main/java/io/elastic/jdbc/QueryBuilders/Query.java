@@ -1,9 +1,11 @@
 package io.elastic.jdbc.QueryBuilders;
 
-import javax.json.JsonObject;
 import io.elastic.jdbc.Utils;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import javax.json.JsonObject;
 
 public abstract class Query {
 
@@ -50,7 +52,8 @@ public abstract class Query {
 
   abstract public ResultSet executePolling(Connection connection) throws SQLException;
 
-  abstract public ResultSet executeLookup(Connection connection, JsonObject body) throws SQLException;
+  abstract public ResultSet executeLookup(Connection connection, JsonObject body)
+      throws SQLException;
 
   abstract public boolean executeRecordExists(Connection connection) throws SQLException;
 
@@ -62,9 +65,11 @@ public abstract class Query {
   abstract public void executeUpdate(Connection connection, String tableName, String idColumn,
       String idValue, JsonObject body) throws SQLException;
 
-  abstract public ResultSet executeSelectQuery(Connection connection, String sqlQuery, JsonObject body) throws SQLException;
+  abstract public ResultSet executeSelectQuery(Connection connection, String sqlQuery,
+      JsonObject body) throws SQLException;
 
-  abstract public ResultSet executeSelectTrigger(Connection connection, String sqlQuery) throws SQLException;
+  abstract public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)
+      throws SQLException;
 
   public void validateQuery() {
     if (tableName == null) {
@@ -74,14 +79,14 @@ public abstract class Query {
 
   public static String preProcessSelect(String sqlQuery) {
     sqlQuery = sqlQuery.trim();
-    if(!isSelect(sqlQuery)) {
+    if (!isSelect(sqlQuery)) {
       throw new RuntimeException("Unresolvable SELECT query");
     }
     return sqlQuery.replaceAll(Utils.VARS_REGEXP, "?");
   }
 
-  public static boolean isSelect(String sqlQuery){
-    String pattern= "select";
+  public static boolean isSelect(String sqlQuery) {
+    String pattern = "select";
     return sqlQuery.toLowerCase().startsWith(pattern);
   }
 

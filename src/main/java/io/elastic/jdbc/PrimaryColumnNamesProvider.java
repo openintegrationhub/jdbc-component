@@ -1,18 +1,21 @@
 package io.elastic.jdbc;
 
+import io.elastic.api.DynamicMetadataProvider;
+import io.elastic.api.SelectModelProvider;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
-import io.elastic.api.DynamicMetadataProvider;
-import io.elastic.api.SelectModelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class PrimaryColumnNamesProvider implements DynamicMetadataProvider, SelectModelProvider {
 
@@ -44,7 +47,8 @@ public class PrimaryColumnNamesProvider implements DynamicMetadataProvider, Sele
   }
 
   public JsonObject getPrimaryColumns(JsonObject configuration) {
-    if (configuration.getString("tableName") == null || configuration.getString("tableName").isEmpty()) {
+    if (configuration.getString("tableName") == null || configuration.getString("tableName")
+        .isEmpty()) {
       throw new RuntimeException("Table name is required");
     }
     String tableName = configuration.getString("tableName");
@@ -60,31 +64,37 @@ public class PrimaryColumnNamesProvider implements DynamicMetadataProvider, Sele
       connection = Utils.getConnection(configuration);
       DatabaseMetaData dbMetaData = connection.getMetaData();
       if (tableName.contains(".")) {
-        schemaName = (isOracle) ? tableName.split("\\.")[0].toUpperCase() : tableName.split("\\.")[0];
-        tableName = (isOracle) ? tableName.split("\\.")[1].toUpperCase() : tableName.split("\\.")[1];
+        schemaName =
+            (isOracle) ? tableName.split("\\.")[0].toUpperCase() : tableName.split("\\.")[0];
+        tableName =
+            (isOracle) ? tableName.split("\\.")[1].toUpperCase() : tableName.split("\\.")[1];
       }
-      rs = dbMetaData.getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null), tableName);
+      rs = dbMetaData
+          .getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
+              tableName);
       while (rs.next()) {
         primaryKeys.add(rs.getString("COLUMN_NAME"));
         logger.info("Primary Key: {}", rs.getString("COLUMN_NAME"));
       }
-      rs = dbMetaData.getColumns(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null), tableName, "%");
+      rs = dbMetaData
+          .getColumns(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null), tableName,
+              "%");
       while (rs.next()) {
         if (primaryKeys.contains(rs.getString("COLUMN_NAME"))) {
           JsonObjectBuilder field = Json.createObjectBuilder();
           String name = rs.getString("COLUMN_NAME");
           Boolean isRequired = false;
-          if(isMssql) {
-            String isAutoincrement = (rs.getString("IS_AUTOINCREMENT") != null) ? rs.getString("IS_AUTOINCREMENT") : "";
+          if (isMssql) {
+            String isAutoincrement =
+                (rs.getString("IS_AUTOINCREMENT") != null) ? rs.getString("IS_AUTOINCREMENT") : "";
             Integer isNullable = (rs.getObject("NULLABLE") != null) ? rs.getInt("NULLABLE") : 1;
             isRequired = isNullable == 0 && !isAutoincrement.equals("YES");
-          }
-          else {
+          } else {
             isRequired = true;
           }
           field.add("required", isRequired)
-               .add("title", name)
-               .add("type", convertType(rs.getInt("DATA_TYPE")));
+              .add("title", name)
+              .add("type", convertType(rs.getInt("DATA_TYPE")));
           properties = Json.createObjectBuilder().add(name, field.build()).build();
           isEmpty = false;
         }

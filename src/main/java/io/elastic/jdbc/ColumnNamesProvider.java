@@ -1,16 +1,19 @@
 package io.elastic.jdbc;
 
+import io.elastic.api.DynamicMetadataProvider;
+import io.elastic.api.SelectModelProvider;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
-import io.elastic.api.DynamicMetadataProvider;
-import io.elastic.api.SelectModelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.*;
-import java.util.Map;
 
 public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModelProvider {
 
@@ -44,7 +47,8 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
   }
 
   public JsonObject getColumns(JsonObject configuration) {
-    if (configuration.getString("tableName") == null || configuration.getString("tableName").isEmpty()) {
+    if (configuration.getString("tableName") == null || configuration.getString("tableName")
+        .isEmpty()) {
       throw new RuntimeException("Table name is required");
     }
     String tableName = configuration.getString("tableName");
@@ -68,17 +72,17 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
         JsonObjectBuilder field = Json.createObjectBuilder();
         String name = rs.getString("COLUMN_NAME");
         Boolean isRequired = false;
-        if(isMssql) {
-          String isAutoincrement = (rs.getString("IS_AUTOINCREMENT") != null) ? rs.getString("IS_AUTOINCREMENT") : "";
+        if (isMssql) {
+          String isAutoincrement =
+              (rs.getString("IS_AUTOINCREMENT") != null) ? rs.getString("IS_AUTOINCREMENT") : "";
           Integer isNullable = (rs.getObject("NULLABLE") != null) ? rs.getInt("NULLABLE") : 1;
           isRequired = isNullable == 0 && !isAutoincrement.equals("YES");
-        }
-        else {
+        } else {
           isRequired = true;
         }
         field.add("required", isRequired)
-             .add("title", name)
-             .add("type", convertType(rs.getInt("DATA_TYPE")));
+            .add("title", name)
+            .add("type", convertType(rs.getInt("DATA_TYPE")));
         properties.add(name, field.build());
         isEmpty = false;
       }
