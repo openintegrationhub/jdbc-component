@@ -1,15 +1,15 @@
 package io.elastic.jdbc
 
-import spock.lang.Ignore
-import spock.lang.Specification
+import spock.lang.*
 
+import javax.json.Json
 import javax.json.JsonObject
 
 @Ignore
-class QueryColumnNamesProviderMSSQLSpec extends Specification {
+class QueryColumnNamesProviderSpec extends Specification {
 
   JsonObject configuration = Json.createObjectBuilder().build()
-  String sqlQuery = ""
+  String sqlQuery;
 
   def setup() {
     sqlQuery = "SELECT * FROM films WHERE watched = @watched:boolean AND created = @created:date"

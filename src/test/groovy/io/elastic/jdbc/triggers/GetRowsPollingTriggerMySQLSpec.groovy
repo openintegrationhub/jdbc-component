@@ -4,9 +4,7 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.EventEmitter.Callback
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
+import spock.lang.*
 
 import javax.json.JsonObjectBuilder
 import java.sql.Connection
@@ -16,11 +14,16 @@ import java.sql.DriverManager
 class GetRowsPollingTriggerMySQLSpec extends Specification {
 
   @Shared
-      connectionString = ""
+  def connectionString = System.getenv("CONN_URI_MYSQL")
   @Shared
-      user = ""
+  def user = System.getenv("CONN_USER_MYSQL")
   @Shared
-      password = ""
+  def password = System.getenv("CONN_PASSWORD_MYSQL")
+  @Shared
+  def databaseName = System.getenv("CONN_DBNAME_MYSQL")
+  @Shared
+  def host = System.getenv("CONN_HOST_MYSQL")
+
   @Shared
   Connection connection;
 
@@ -66,8 +69,8 @@ class GetRowsPollingTriggerMySQLSpec extends Specification {
         .add("user", user)
         .add("password", password)
         .add("dbEngine", "mysql")
-        .add("host", "")
-        .add("databaseName", "")
+        .add("host", host)
+        .add("databaseName", databaseName)
         .add("tableName", "stars")
 
     JsonObjectBuilder snapshot = Json.createObjectBuilder()

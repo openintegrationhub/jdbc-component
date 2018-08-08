@@ -1,9 +1,7 @@
 package io.elastic.jdbc
 
 
-import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
+import spock.lang.*
 
 import javax.json.Json
 import javax.json.JsonObject
@@ -13,14 +11,18 @@ import java.sql.DriverManager
 
 @Ignore
 class PrimaryColumnNamesProviderOracleSpec extends Specification {
+
   @Shared
-  def connectionString = ""
+  def connectionString = System.getenv("CONN_URI_ORACLE")
   @Shared
-  def user = ""
+  def user = System.getenv("CONN_USER_ORACLE")
   @Shared
-  def password = ""
+  def password = System.getenv("CONN_PASSWORD_ORACLE")
   @Shared
-  def databaseName = ""
+  def databaseName = System.getenv("CONN_DBNAME_ORACLE")
+  @Shared
+  def host = System.getenv("CONN_HOST_ORACLE")
+
   @Shared
   Connection connection
 
@@ -67,8 +69,7 @@ class PrimaryColumnNamesProviderOracleSpec extends Specification {
     config.add("user", user)
         .add("password", password)
         .add("dbEngine", "oracle")
-        .add("host", "")
-        .add("port", "")
+        .add("host", host)
         .add("databaseName", databaseName)
         .add("tableName", "stars")
     PrimaryColumnNamesProvider provider = new PrimaryColumnNamesProvider()

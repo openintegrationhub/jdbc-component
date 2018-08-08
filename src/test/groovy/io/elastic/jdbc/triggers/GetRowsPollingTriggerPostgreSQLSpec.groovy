@@ -4,9 +4,7 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.EventEmitter.Callback
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
+import spock.lang.*
 
 import javax.json.JsonObject
 import java.sql.Connection
@@ -16,11 +14,16 @@ import java.sql.DriverManager
 class GetRowsPollingTriggerPostgreSQLSpec extends Specification {
 
   @Shared
-      connectionString = ""
+  def connectionString = System.getenv("CONN_URI_POSTGRESQL")
   @Shared
-      user = ""
+  def user = System.getenv("CONN_USER_POSTGRESQL")
   @Shared
-      password = ""
+  def password = System.getenv("CONN_PASSWORD_POSTGRESQL")
+  @Shared
+  def databaseName = System.getenv("CONN_DBNAME_POSTGRESQL")
+  @Shared
+  def host = System.getenv("CONN_HOST_POSTGRESQL")
+
   @Shared
   Connection connection
 
@@ -67,8 +70,8 @@ class GetRowsPollingTriggerPostgreSQLSpec extends Specification {
     config.addProperty("user", user)
     config.addProperty("password", password)
     config.addProperty("dbEngine", "postgresql")
-    config.addProperty("host", "")
-    config.addProperty("databaseName", "")
+    config.addProperty("host", host)
+    config.addProperty("databaseName", databaseName)
     config.addProperty("tableName", "stars")
 
     JsonObject snapshot = Json.createObjectBuilder().build()

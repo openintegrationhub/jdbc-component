@@ -1,8 +1,6 @@
 package io.elastic.jdbc
 
-import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
+import spock.lang.*
 
 import javax.json.Json
 import javax.json.JsonObject
@@ -12,14 +10,18 @@ import java.sql.DriverManager
 
 @Ignore
 class PrimaryColumnNamesProviderMSSQLSpec extends Specification {
+
   @Shared
-  def connectionString = ""
+  def connectionString = System.getenv("CONN_URI_MSSQL")
   @Shared
-  def user = ""
+  def user = System.getenv("CONN_USER_MSSQL")
   @Shared
-  def password = ""
+  def password = System.getenv("CONN_PASSWORD_MSSQL")
   @Shared
-  def databaseName = ""
+  def databaseName = System.getenv("CONN_DBNAME_MSSQL")
+  @Shared
+  def host = System.getenv("CONN_HOST_MSSQL")
+
   @Shared
   Connection connection
 
@@ -45,8 +47,7 @@ class PrimaryColumnNamesProviderMSSQLSpec extends Specification {
     config.add("user", user)
         .add("password", password)
         .add("dbEngine", "mssql")
-        .add("host", "")
-        .add("port", "")
+        .add("host", host)
         .add("databaseName", databaseName)
         .add("tableName", "stars")
     PrimaryColumnNamesProvider provider = new PrimaryColumnNamesProvider()

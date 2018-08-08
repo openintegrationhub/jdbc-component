@@ -3,26 +3,30 @@ package io.elastic.jdbc.actions
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import spock.lang.*
+import io.elastic.jdbc.actions.SelectAction
+import spock.lang.Ignore
+import spock.lang.Shared
+import spock.lang.Specification
 
+import javax.json.Json
 import javax.json.JsonObject
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 
 @Ignore
-class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
+class SelectMySQLSpec extends Specification {
 
   @Shared
-  def connectionString = System.getenv("CONN_URI_MSSQL")
+  def connectionString = System.getenv("CONN_URI_MYSQL")
   @Shared
-  def user = System.getenv("CONN_USER_MSSQL")
+  def user = System.getenv("CONN_USER_MYSQL")
   @Shared
-  def password = System.getenv("CONN_PASSWORD_MSSQL")
+  def password = System.getenv("CONN_PASSWORD_MYSQL")
   @Shared
-  def databaseName = System.getenv("CONN_DBNAME_MSSQL")
+  def databaseName = System.getenv("CONN_DBNAME_MYSQL")
   @Shared
-  def host = System.getenv("CONN_HOST_MSSQL")
+  def host = System.getenv("CONN_HOST_MYSQL")
 
   @Shared
   Connection connection
@@ -38,7 +42,7 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
   @Shared
   EventEmitter emitter
   @Shared
-  LookupRowByPrimaryKey action
+  SelectAction action
 
   def setupSpec() {
     connection = DriverManager.getConnection(connectionString, user, password)
@@ -54,7 +58,7 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
     dataCallback = Mock(EventEmitter.Callback)
     reboundCallback = Mock(EventEmitter.Callback)
     emitter = new EventEmitter.Builder().onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback).build()
-    action = new LookupRowByPrimaryKey(emitter)
+    action = new SelectAction(emitter)
   }
 
   def runAction(JsonObject config, JsonObject body, JsonObject snapshot) {
@@ -64,7 +68,7 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
   }
 
   def getStarsConfig() {
-    JsonObject config = Json.createObjectBuilder().build()
+    JsonObject config = Json.createObjectBuilder().build();
 
     config.addProperty("idColumn", "id")
     config.addProperty("tableName", "stars")
@@ -77,8 +81,7 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
   }
 
   def prepareStarsTable() {
-    String sql = "IF OBJECT_ID('stars', 'U') IS NOT NULL\n" +
-        "  DROP TABLE stars;"
+    String sql = "DROP TABLE IF EXISTS stars;"
     connection.createStatement().execute(sql);
     connection.createStatement().execute("CREATE TABLE stars (id int, name varchar(255) NOT NULL, date datetime, radius int, destination int)");
   }
@@ -95,12 +98,10 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
   }
 
   def cleanupSpec() {
-    String sql = "IF OBJECT_ID('persons', 'U') IS NOT NULL\n" +
-        "  DROP TABLE persons;"
+    String sql = "DROP TABLE IF EXISTS persons;"
 
     connection.createStatement().execute(sql)
-    sql = "IF OBJECT_ID('stars', 'U') IS NOT NULL\n" +
-        "  DROP TABLE stars;"
+    sql = "DROP TABLE IF EXISTS stars;"
     connection.createStatement().execute(sql)
     connection.close()
   }
@@ -109,9 +110,9 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
 
     prepareStarsTable();
 
-    JsonObject snapshot = Json.createObjectBuilder().build()
+    JsonObject snapshot = Json.createObjectBuilder().build();
 
-    JsonObject body = Json.createObjectBuilder().build()
+    JsonObject body = Json.createObjectBuilder().build();
     body.addProperty("id", "1")
     body.addProperty("name", "Taurus")
     body.addProperty("date", "2015-02-19 10:10:10.0")
@@ -130,9 +131,9 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
 
     prepareStarsTable();
 
-    JsonObject snapshot = Json.createObjectBuilder().build()
+    JsonObject snapshot = Json.createObjectBuilder().build();
 
-    JsonObject body = Json.createObjectBuilder().build()
+    JsonObject body = Json.createObjectBuilder().build();
     body.addProperty("id", "1")
     body.addProperty("name", "Taurus")
     body.addProperty("radius", "test")
@@ -217,8 +218,7 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
   }
 
   def preparePersonsTable() {
-    String sql = "IF OBJECT_ID('persons', 'U') IS NOT NULL\n" +
-        "  DROP TABLE persons;"
+    String sql = "DROP TABLE IF EXISTS persons;"
     connection.createStatement().execute(sql);
     connection.createStatement().execute("CREATE TABLE persons (id int, name varchar(255) NOT NULL, email varchar(255) NOT NULL)");
   }

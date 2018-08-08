@@ -2,9 +2,7 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
 import io.elastic.jdbc.actions.SelectAction
-import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
+import spock.lang.*
 
 import javax.json.Json
 import javax.json.JsonObject
@@ -16,13 +14,15 @@ import java.sql.ResultSet
 class SelectMSSQLSpec extends Specification {
 
   @Shared
-  def connectionString = ""
+  def connectionString = System.getenv("CONN_URI_MSSQL")
   @Shared
-  def user = ""
+  def user = System.getenv("CONN_USER_MSSQL")
   @Shared
-  def password = ""
+  def password = System.getenv("CONN_PASSWORD_MSSQL")
   @Shared
-  def databaseName = ""
+  def databaseName = System.getenv("CONN_DBNAME_MSSQL")
+  @Shared
+  def host = System.getenv("CONN_HOST_MSSQL")
 
   @Shared
   Connection connection
@@ -71,8 +71,8 @@ class SelectMSSQLSpec extends Specification {
     config.addProperty("user", user)
     config.addProperty("password", password)
     config.addProperty("dbEngine", "mssql")
-    config.addProperty("host", "")
-    config.addProperty("databaseName", "")
+    config.addProperty("host", host)
+    config.addProperty("databaseName", databaseName)
     return config;
   }
 
@@ -211,8 +211,8 @@ class SelectMSSQLSpec extends Specification {
     config.addProperty("user", user)
     config.addProperty("password", password)
     config.addProperty("dbEngine", "mssql")
-    config.addProperty("host", "")
-    config.addProperty("databaseName", "")
+    config.addProperty("host", host)
+    config.addProperty("databaseName", databaseName)
     return config;
   }
 
