@@ -19,7 +19,8 @@ public class MySQL extends Query {
     PreparedStatement stmt = connection.prepareStatement(sql.toString());
     int i = 1;
     for (Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), (entry.getValue() != null) ? entry.getValue().toString().replace("\"", "") : null);
+      Utils.setStatementParam(stmt, i, entry.getKey(), (entry.getValue() != null) ?
+              entry.getValue().toString().replace("\"", "") : null);
       i++;
     }
     return stmt.executeQuery();
@@ -114,7 +115,8 @@ public class MySQL extends Query {
     PreparedStatement stmt = connection.prepareStatement(sql);
     int i = 1;
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), entry.getValue().toString());
+      Utils.setStatementParam(stmt, i, entry.getKey(),
+              entry.getValue().toString().replace("\"", ""));
       i++;
     }
     stmt.execute();
@@ -136,7 +138,7 @@ public class MySQL extends Query {
     PreparedStatement stmt = connection.prepareStatement(sql);
     int i = 1;
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), entry.getValue().toString());
+      Utils.setStatementParam(stmt, i, entry.getKey(), entry.getValue().toString().replace("\"", ""));
       i++;
     }
     Utils.setStatementParam(stmt, i, idColumn, idValue);
