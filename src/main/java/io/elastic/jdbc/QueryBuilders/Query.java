@@ -55,7 +55,7 @@ public abstract class Query {
   abstract public ResultSet executeLookup(Connection connection, JsonObject body)
       throws SQLException;
 
-  abstract public boolean executeRecordExists(Connection connection) throws SQLException;
+  abstract public boolean executeRecordExists(Connection connection, JsonObject body) throws SQLException;
 
   abstract public int executeDelete(Connection connection, JsonObject body) throws SQLException;
 

@@ -90,7 +90,7 @@ public class UpsertRowByPrimaryKey implements Module {
         Query query = queryFactory.getQuery(dbEngine);
         logger.info("Lookup parameters: {} = {}", primaryKey.toString(), primaryValue.toString());
         query.from(tableName).lookup(primaryKey.toString(), primaryValue.toString());
-        if (query.executeRecordExists(connection)) {
+        if (query.executeRecordExists(connection, body)) {
           logger.info("Update parameters: {} = {}", primaryKey.toString(), primaryValue.toString());
           query.executeUpdate(connection, tableName, primaryKey.toString(), primaryValue.toString(), body);
         } else {

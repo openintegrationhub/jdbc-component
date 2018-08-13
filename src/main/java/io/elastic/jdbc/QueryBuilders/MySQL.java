@@ -81,13 +81,13 @@ public class MySQL extends Query {
         return stmt.executeUpdate();
     }
 
-    public boolean executeRecordExists(Connection connection) throws SQLException {
+    public boolean executeRecordExists(Connection connection, JsonObject body) throws SQLException {
         validateQuery();
         String sql = "SELECT COUNT(*)" +
                 " FROM " + tableName +
                 " WHERE " + lookupField + " = ?";
         PreparedStatement stmt = connection.prepareStatement(sql);
-        stmt.setString(1, lookupValue);
+        Utils.setStatementParam(stmt, 1, lookupField, body);
         ResultSet rs = stmt.executeQuery();
         rs.next();
         return rs.getInt(1) > 0;
