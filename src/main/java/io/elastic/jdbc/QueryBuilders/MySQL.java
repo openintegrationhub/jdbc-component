@@ -116,7 +116,7 @@ public class MySQL extends Query {
     int i = 1;
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
       Utils.setStatementParam(stmt, i, entry.getKey(),
-              entry.getValue().toString().replace("\"", ""));
+              entry.getValue().toString().replaceAll("^\"+|\"+$", ""));
       i++;
     }
     stmt.execute();
@@ -138,7 +138,7 @@ public class MySQL extends Query {
     PreparedStatement stmt = connection.prepareStatement(sql);
     int i = 1;
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), entry.getValue().toString().replace("\"", ""));
+      Utils.setStatementParam(stmt, i, entry.getKey(), entry.getValue().toString().replaceAll("^\"+|\"+$", ""));
       i++;
     }
     Utils.setStatementParam(stmt, i, idColumn, idValue);
