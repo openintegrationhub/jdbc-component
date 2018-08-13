@@ -100,43 +100,43 @@ public class Utils {
   }
 
   public static void setStatementParam(PreparedStatement statement, int paramNumber, String colName,
-    String colValue) throws SQLException {
+                                       JsonObject body) throws SQLException {
     try {
       if (isNumeric(colName)) {
-        if (colValue != "null") {
-          statement.setBigDecimal(paramNumber, new BigDecimal(colValue));
+        if (body.get(colName) != null) {
+          statement.setBigDecimal(paramNumber, body.getJsonNumber(colName).bigDecimalValue());
         } else {
           statement.setBigDecimal(paramNumber, null);
         }
       } else if (isTimestamp(colName)) {
-        if (colValue != "null") {
-          statement.setTimestamp(paramNumber, Timestamp.valueOf(colValue));
+        if (body.get(colName) != null) {
+          statement.setTimestamp(paramNumber, Timestamp.valueOf(body.getString(colName)));
         } else {
           statement.setTimestamp(paramNumber, null);
         }
       } else if (isDate(colName)) {
-        if (colValue != "null") {
-          statement.setDate(paramNumber, Date.valueOf(colValue));
+        if (body.get(colName) != null) {
+          statement.setDate(paramNumber, Date.valueOf(body.getString(colName)));
         } else {
           statement.setDate(paramNumber, null);
         }
       } else if (isBoolean(colName)) {
-        if (colValue != "null") {
-          statement.setBoolean(paramNumber, Boolean.valueOf(colValue));
+        if (body.get(colName) != null) {
+          statement.setBoolean(paramNumber, body.getBoolean(colName));
         } else {
           statement.setBoolean(paramNumber, false);
         }
       } else {
-        if (colValue != "null") {
-          statement.setString(paramNumber, colValue);
+        if (body.get(colName) != null) {
+          statement.setString(paramNumber, body.getString(colName));
         } else {
           statement.setNull(paramNumber, Types.VARCHAR);
         }
       }
     } catch (java.lang.NumberFormatException e) {
       String message = String
-          .format("Provided data: %s can't be cast to the column %s datatype", colValue,
-              colName);
+              .format("Provided data: %s can't be cast to the column %s datatype",body.get(colName),
+                      colName);
       throw new RuntimeException(message);
     }
   }
