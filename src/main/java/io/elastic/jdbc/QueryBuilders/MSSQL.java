@@ -17,8 +17,7 @@ public class MSSQL extends Query {
     PreparedStatement stmt = connection.prepareStatement(sqlQuery);
     int i = 1;
     for (Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(),
-          entry.getValue().toString().replace("\"", ""));
+      Utils.setStatementParam(stmt, i, entry.getKey(), body);
       i++;
     }
     return stmt.executeQuery();
@@ -70,7 +69,7 @@ public class MSSQL extends Query {
         " AND RowNum < ?";
     PreparedStatement stmt = connection.prepareStatement(sql);
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, 1, entry.getKey(), entry.getValue().toString());
+      Utils.setStatementParam(stmt, 1, entry.getKey(), body);
     }
     stmt.setInt(2, skipNumber);
     stmt.setInt(3, countNumber + skipNumber);
@@ -120,7 +119,7 @@ public class MSSQL extends Query {
     PreparedStatement stmt = connection.prepareStatement(sql);
     int i = 1;
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), entry.getValue().toString());
+      Utils.setStatementParam(stmt, i, entry.getKey(), body);
       i++;
     }
     stmt.execute();
@@ -142,10 +141,10 @@ public class MSSQL extends Query {
     PreparedStatement stmt = connection.prepareStatement(sql);
     int i = 1;
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), entry.getValue().toString());
+      Utils.setStatementParam(stmt, i, entry.getKey(), body);
       i++;
     }
-    Utils.setStatementParam(stmt, i, idColumn, idValue);
+    Utils.setStatementParam(stmt, i, idColumn, body);
     stmt.execute();
   }
 }
