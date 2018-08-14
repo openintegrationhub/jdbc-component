@@ -30,8 +30,8 @@ public class UpsertRowByPrimaryKey implements Module {
     final JsonObject configuration = parameters.getConfiguration();
     final JsonObject body = parameters.getMessage().getBody();
     JsonObject snapshot = parameters.getSnapshot();
-    String tableName = "";
-    String dbEngine = "";
+    String tableName;
+    String dbEngine;
     String schemaName = "";
     ResultSet rs = null;
     String primaryKey = "";
@@ -62,41 +62,46 @@ public class UpsertRowByPrimaryKey implements Module {
 
     try {
       DatabaseMetaData dbMetaData = connection.getMetaData();
+
       if (tableName.contains(".")) {
         schemaName =
                 (isOracle) ? tableName.split("\\.")[0].toUpperCase() : tableName.split("\\.")[0];
         tableName =
                 (isOracle) ? tableName.split("\\.")[1].toUpperCase() : tableName.split("\\.")[1];
       }
-      rs = dbMetaData
-              .getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
-                      tableName);
+
+      rs = dbMetaData.getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),tableName);
+
       while (rs.next()) {
         primaryKey=rs.getString("COLUMN_NAME");
         primaryKeysCount++;
       }
+
       if (primaryKeysCount == 1) {
         logger.info("Executing upsert row by primary key action");
+
         for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
           if (entry.getKey().equals(primaryKey)) {
             logger.info("Primary key{} = {}", entry.getKey(), entry.getValue());
             primaryValue.append(entry.getValue());
           }
         }
+
         Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
         logger.info("Detected column types: " + Utils.columnTypes);
-        Map<String, String> columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
         QueryFactory queryFactory = new QueryFactory();
         Query query = queryFactory.getQuery(dbEngine);
-        logger.info("Lookup parameters: {} = {}", primaryKey.toString(), primaryValue.toString());
-        query.from(tableName).lookup(primaryKey.toString(), primaryValue.toString());
+        logger.info("Lookup parameters: {} = {}", primaryKey, primaryValue.toString());
+        query.from(tableName).lookup(primaryKey, primaryValue.toString());
+
         if (query.executeRecordExists(connection, body)) {
-          logger.info("Update parameters: {} = {}", primaryKey.toString(), primaryValue.toString());
-          query.executeUpdate(connection, tableName, primaryKey.toString(), primaryValue.toString(), body);
+          logger.info("Update parameters: {} = {}", primaryKey, primaryValue.toString());
+          query.executeUpdate(connection, tableName, primaryKey, primaryValue.toString(), body);
         } else {
-          logger.info("Insert parameters: {} = {}", primaryKey.toString(), primaryValue.toString());
+          logger.info("Insert parameters: {} = {}", primaryKey, primaryValue.toString());
           query.executeInsert(connection, tableName, body);
         }
+
         logger.info("Emit data= {}", body.toString());
         parameters.getEventEmitter().emitData(new Message.Builder().body(body).build());
         snapshot = Json.createObjectBuilder().add(PROPERTY_TABLE_NAME, tableName).build();
