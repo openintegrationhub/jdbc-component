@@ -13,23 +13,23 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 
-//@Ignore
+@Ignore
 class UpsertRowByPrimaryKeyOracleSpec extends Specification {
 
   @Shared
-  def user = "elasticio"//System.getenv("CONN_USER_MSSQL")
+  def user = System.getenv("CONN_USER_ORACLE")
   @Shared
-  def password = "PeU13cbKtH"//System.getenv("CONN_PASSWORD_MSSQL")
+  def password = System.getenv("CONN_PASSWORD_ORACLE")
   @Shared
-  def databaseName = "elasticio_testdb"//System.getenv("CONN_DBNAME_MSSQL")
+  def databaseName = System.getenv("CONN_DBNAME_ORACLE")
   @Shared
-  def host = "ec2-18-194-228-22.eu-central-1.compute.amazonaws.com"//System.getenv("CONN_HOST_MSSQL")
+  def host = System.getenv("CONN_HOST_ORACLE")
   @Shared
-  def port = "1521"//System.getenv("CONN_PORT_MSSQL")
+  def port = System.getenv("CONN_PORT_ORACLE")
   @Shared
-  def dbEngine = "oracle"//System.getenv("CONN_DBENGINE_MSSQL")
+  def dbEngine = "oracle"
   @Shared
-  def connectionString ="jdbc:oracle:thin:@//ec2-18-194-228-22.eu-central-1.compute.amazonaws.com:1521/XE"
+  def connectionString ="jdbc:oracle:thin:@//" + host + ":" + port + "/XE"
   @Shared
   Connection connection
 
