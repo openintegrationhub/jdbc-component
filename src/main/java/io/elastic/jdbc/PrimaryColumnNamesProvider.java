@@ -57,8 +57,8 @@ public class PrimaryColumnNamesProvider implements DynamicMetadataProvider, Sele
     ResultSet rs = null;
     String schemaName = null;
     Boolean isEmpty = true;
-    Boolean isOracle = (configuration.getString("dbEngine").equals("oracle")) ? true : false;
-    Boolean isMssql = (configuration.getString("dbEngine").equals("mssql")) ? true : false;
+    Boolean isOracle = configuration.getString("dbEngine").equals("oracle");
+    Boolean isMssql = configuration.getString("dbEngine").equals("mssql");
     List<String> primaryKeys = new ArrayList();
     try {
       connection = Utils.getConnection(configuration);
@@ -111,14 +111,14 @@ public class PrimaryColumnNamesProvider implements DynamicMetadataProvider, Sele
         try {
           rs.close();
         } catch (SQLException e) {
-          logger.error("Failed to close result set", e.toString());
+          logger.error("Failed to close result set", e);
         }
       }
       if (connection != null) {
         try {
           connection.close();
         } catch (SQLException e) {
-          logger.error("Failed to close connection", e.toString());
+          logger.error("Failed to close connection", e);
         }
       }
     }

@@ -57,8 +57,8 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
     ResultSet rs = null;
     String schemaName = null;
     boolean isEmpty = true;
-    Boolean isOracle = (configuration.getString("dbEngine").equals("oracle")) ? true : false;
-    Boolean isMssql = (configuration.getString("dbEngine").equals("mssql")) ? true : false;
+    Boolean isOracle = configuration.getString("dbEngine").equals("oracle");
+    Boolean isMssql = configuration.getString("dbEngine").equals("mssql");
     try {
       connection = Utils.getConnection(configuration);
       DatabaseMetaData dbMetaData = connection.getMetaData();
@@ -97,14 +97,14 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
         try {
           rs.close();
         } catch (SQLException e) {
-          logger.error("Failed to close result set {}", e.toString());
+          logger.error("Failed to close result set {}", e);
         }
       }
       if (connection != null) {
         try {
           connection.close();
         } catch (SQLException e) {
-          logger.error("Failed to close connection {}", e.toString());
+          logger.error("Failed to close connection {}", e);
         }
       }
     }
