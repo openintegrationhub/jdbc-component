@@ -36,7 +36,7 @@ public class UpsertRowByPrimaryKey implements Module {
     ResultSet rs = null;
     String primaryKey = "";
     StringBuilder primaryValue = new StringBuilder();
-    Integer primaryKeysCount = 0;
+    int primaryKeysCount = 0;
 
     if (configuration.containsKey(PROPERTY_TABLE_NAME)
             && Utils.getNonNullString(configuration, PROPERTY_TABLE_NAME).length() != 0) {
@@ -62,38 +62,33 @@ public class UpsertRowByPrimaryKey implements Module {
 
     try {
       DatabaseMetaData dbMetaData = connection.getMetaData();
-
       if (tableName.contains(".")) {
         schemaName =
                 (isOracle) ? tableName.split("\\.")[0].toUpperCase() : tableName.split("\\.")[0];
         tableName =
                 (isOracle) ? tableName.split("\\.")[1].toUpperCase() : tableName.split("\\.")[1];
       }
-
-      rs = dbMetaData.getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),tableName);
-
+      rs = dbMetaData
+              .getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
+                      tableName);
       while (rs.next()) {
         primaryKey=rs.getString("COLUMN_NAME");
         primaryKeysCount++;
       }
-
       if (primaryKeysCount == 1) {
         logger.info("Executing upsert row by primary key action");
-
         for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
           if (entry.getKey().equals(primaryKey)) {
             logger.info("Primary key{} = {}", entry.getKey(), entry.getValue());
             primaryValue.append(entry.getValue());
           }
         }
-
         Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
         logger.info("Detected column types: " + Utils.columnTypes);
         QueryFactory queryFactory = new QueryFactory();
         Query query = queryFactory.getQuery(dbEngine);
         logger.info("Lookup parameters: {} = {}", primaryKey, primaryValue.toString());
         query.from(tableName).lookup(primaryKey, primaryValue.toString());
-
         if (query.executeRecordExists(connection, body)) {
           logger.info("Update parameters: {} = {}", primaryKey, primaryValue.toString());
           query.executeUpdate(connection, tableName, primaryKey, primaryValue.toString(), body);
@@ -101,7 +96,6 @@ public class UpsertRowByPrimaryKey implements Module {
           logger.info("Insert parameters: {} = {}", primaryKey, primaryValue.toString());
           query.executeInsert(connection, tableName, body);
         }
-
         logger.info("Emit data= {}", body.toString());
         parameters.getEventEmitter().emitData(new Message.Builder().body(body).build());
         snapshot = Json.createObjectBuilder().add(PROPERTY_TABLE_NAME, tableName).build();
