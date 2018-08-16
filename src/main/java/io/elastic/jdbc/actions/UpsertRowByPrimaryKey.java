@@ -111,14 +111,14 @@ public class UpsertRowByPrimaryKey implements Module {
         try {
           rs.close();
         } catch (SQLException e) {
-          System.out.println("Failed to close result set" + e.toString());
+          logger.info("Failed to close result set {}",e);
         }
       }
       if (connection != null) {
         try {
           connection.close();
         } catch (SQLException e) {
-          System.out.println("Failed to close connection" + e.toString());
+          logger.info("Failed to close connection {}", e);
         }
       }
     }
