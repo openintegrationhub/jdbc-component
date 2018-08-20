@@ -156,11 +156,9 @@ public class Utils {
     if (sqlType == Types.BIT || sqlType == Types.BOOLEAN) {
       return "boolean";
     }
-    if (sqlType==Types.OTHER)
+    if (sqlType == Types.OTHER)
       if (sqlTypeName.toLowerCase().contains("timestamp"))
         return "timestamp";
-      else
-        return "string";
     return "string";
   }
 
@@ -221,25 +219,19 @@ public class Utils {
   }
 
   public static Map<String, String> getVariableTypes(String sqlQuery) {
-    JsonObject properties = Json.createObjectBuilder().build();
     Map<String, String> columnTypes = new HashMap<String, String>();
     Pattern pattern = Pattern.compile(Utils.VARS_REGEXP);
     Matcher matcher = pattern.matcher(sqlQuery);
-    Boolean isEmpty = true;
+    Boolean isEmpty;
     if (matcher.find()) {
       do {
-        JsonObject field = Json.createObjectBuilder().build();
         String result[] = matcher.group().split(":");
         String name = result[0].substring(1);
         String type = result[1];
-        field = Json.createObjectBuilder().add("title", name)
-            .add("type", type).build();
-        properties = Json.createObjectBuilder().add(name, field).build();
         columnTypes.put(name, type);
         isEmpty = false;
       } while (matcher.find());
       if (isEmpty) {
-        properties = Json.createObjectBuilder().add("empty dataset", "no columns").build();
         columnTypes.put("empty dataset", "no columns");
       }
     }
