@@ -137,7 +137,7 @@
           "model": "io.elastic.jdbc.TableNameProvider"
         }
       },
-      "dynamicMetadata": "io.elastic.jdbc.ColumnNamesProvider"
+      "dynamicMetadata": "io.elastic.jdbc.ColumnNamesWithPrimaryKeyProvider"
     },
     "deleteRowByPrimaryKey": {
       "main": "io.elastic.jdbc.actions.DeleteRowByPrimaryKey",
