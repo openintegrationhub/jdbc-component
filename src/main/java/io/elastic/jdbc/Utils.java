@@ -141,7 +141,7 @@ public class Utils {
     }
   }
 
-  private static String detectColumnType(Integer sqlType) {
+  private static String detectColumnType(Integer sqlType, String sqlTypeName) {
     if (sqlType == Types.NUMERIC || sqlType == Types.DECIMAL || sqlType == Types.TINYINT
         || sqlType == Types.SMALLINT || sqlType == Types.INTEGER || sqlType == Types.BIGINT
         || sqlType == Types.REAL || sqlType == Types.FLOAT || sqlType == Types.DOUBLE) {
@@ -156,6 +156,11 @@ public class Utils {
     if (sqlType == Types.BIT || sqlType == Types.BOOLEAN) {
       return "boolean";
     }
+    if (sqlType==Types.OTHER)
+      if (sqlTypeName.toLowerCase().contains("timestamp"))
+        return "timestamp";
+      else
+        return "string";
     return "string";
   }
 
@@ -198,7 +203,7 @@ public class Utils {
       rs = md.getColumns(null, schemaName, tableName, "%");
       while (rs.next()) {
         String name = rs.getString("COLUMN_NAME").toLowerCase();
-        String type = detectColumnType(rs.getInt("DATA_TYPE"));
+        String type = detectColumnType(rs.getInt("DATA_TYPE"), rs.getString("TYPE_NAME"));
         columnTypes.put(name, type);
       }
     } catch (Exception e) {

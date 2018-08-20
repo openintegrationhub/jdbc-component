@@ -71,14 +71,14 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
       while (rs.next()) {
         JsonObjectBuilder field = Json.createObjectBuilder();
         String name = rs.getString("COLUMN_NAME");
-        Boolean isRequired = false;
+        Boolean isRequired;
+        Integer isNullable = (rs.getObject("NULLABLE") != null) ? rs.getInt("NULLABLE") : 1;
         if (isMssql) {
           String isAutoincrement =
               (rs.getString("IS_AUTOINCREMENT") != null) ? rs.getString("IS_AUTOINCREMENT") : "";
-          Integer isNullable = (rs.getObject("NULLABLE") != null) ? rs.getInt("NULLABLE") : 1;
           isRequired = isNullable == 0 && !isAutoincrement.equals("YES");
         } else {
-          isRequired = false;
+          isRequired = isNullable == 0;
         }
         field.add("required", isRequired)
             .add("title", name)
