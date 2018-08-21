@@ -31,10 +31,7 @@ You can add the authorisation methods during the integration flow design or by g
 ### DB Engine
 ![image](https://user-images.githubusercontent.com/40201204/43577772-6f85bdea-9655-11e8-96e1-368493a36c9d.png)
 You are able to choose one of existing database types
-- ``MySQL`` - compatible with MySQL Server 5.5, 5.6, 5.7 and 8.0.
-- ``PostgreSQL`` - compatible with PostgreSQL 8.2 and higher
-- ``Oracle`` - compatible with Oracle Database 8.1.7 - 12.1.0.2
-- ``MSSQL`` - compatible with Microsoft SQL Server 2008 R2 and higher
+
 ### Connection URI
 In the Connection URI field please provide hostname of the server, e.g. ``acme.com``
 ### Connection port
@@ -122,11 +119,19 @@ Component supports dynamic incoming metadata - as soon as your query is in place
 
 ### LOOKUP BY PRIMARY KEY
 ![image](https://user-images.githubusercontent.com/40201204/43592505-5b6bbfe8-967e-11e8-845e-2ce8ac707357.png)
+
 The action will execute select query from a ``Table`` dropdown field, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns only one result (a primary key is unique).
 Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty response, otherwise you will get an error on empty response.
 #### Input fields description
 ![image](https://user-images.githubusercontent.com/40201204/43644579-f593d1c8-9737-11e8-9b97-ee9e575a19f7.png)
 As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
+
+### UPSERT BY PRIMARY KEY
+![image](https://user-images.githubusercontent.com/16806832/44396836-d3880280-a546-11e8-8fbd-efc1fd089d93.png)
+The action will execute select query from a ``Tables`` dropdown field, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"), if result is nullable, then action will execute insert query by PRIMARY KEY with specified field, else - action will execute update query by PRIMARY KEY with specified field. The action returns only one result row (a primary key is unique).
+#### Input fields description
+As an input metadata you will get all fields of selected table. [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY") is required field (will mark as asterisk) and other input fields are optional.
+![image](https://user-images.githubusercontent.com/16806832/44397461-1a76f780-a549-11e8-8247-9a6f9aa3f3b4.png)
 
 ### DELETE BY PRIMARY KEY
 ![image](https://user-images.githubusercontent.com/40201204/43592505-5b6bbfe8-967e-11e8-845e-2ce8ac707357.png)
@@ -135,6 +140,14 @@ Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty respon
 #### Input fields description
 ![image](https://user-images.githubusercontent.com/40201204/43644579-f593d1c8-9737-11e8-9b97-ee9e575a19f7.png)
 As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
+
+## Current limitations
+1. Composite primary key is not supported.
+2. Only following versions of DataBase are supported:
+- MySQL - compatible with MySQL Server 5.5, 5.6, 5.7 and 8.0.
+- PostgreSQL - compatible with PostgreSQL 8.2 and higher
+- Oracle - compatible with Oracle Database 8.1.7 - 12.1.0.2
+- MSSQL - compatible with Microsoft SQL Server 2008 R2 and higher
 
 ## Known issues
 No known issues are there yet.
