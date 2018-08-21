@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: io.elastic:java-api:2.1.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.elastic/java-api/2.1.0/c5047a0d3e7e266848e50f2a3bafe9e8bcde3311/java-api-2.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/io.elastic/java-api/2.1.0/84ee04e167b4c014e822e02d1413a5193328eef7/java-api-2.1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
