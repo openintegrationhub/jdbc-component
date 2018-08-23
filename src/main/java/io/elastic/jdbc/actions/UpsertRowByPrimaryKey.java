@@ -100,9 +100,12 @@ public class UpsertRowByPrimaryKey implements Module {
         snapshot = Json.createObjectBuilder().add(PROPERTY_TABLE_NAME, tableName).build();
         logger.info("Emitting new snapshot {}", snapshot.toString());
         parameters.getEventEmitter().emitSnapshot(snapshot);
+      } else if (primaryKeysCount == 0) {
+        logger.error("Error: Table has not Primary Key. Should be one Primary Key");
+        throw new IllegalStateException("Table has not Primary Key. Should be one Primary Key");
       } else {
-        logger.error("Error: Should be one Primary Key");
-        throw new IllegalStateException("Should be one Primary Key");
+        logger.error("Error: Composite Primary Key is not supported");
+        throw new IllegalStateException("Composite Primary Key is not supported");
       }
     } catch (SQLException e) {
       throw new RuntimeException(e);
@@ -111,7 +114,7 @@ public class UpsertRowByPrimaryKey implements Module {
         try {
           rs.close();
         } catch (SQLException e) {
-          logger.info("Failed to close result set {}",e);
+          logger.info("Failed to close result set {}", e);
         }
       }
       if (connection != null) {
