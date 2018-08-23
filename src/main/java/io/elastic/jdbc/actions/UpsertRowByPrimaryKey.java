@@ -86,15 +86,8 @@ public class UpsertRowByPrimaryKey implements Module {
         logger.info("Detected column types: " + Utils.columnTypes);
         QueryFactory queryFactory = new QueryFactory();
         Query query = queryFactory.getQuery(dbEngine);
-        logger.info("Lookup parameters: {} = {}", primaryKey, primaryValue.toString());
-        query.from(tableName).lookup(primaryKey, primaryValue.toString());
-        if (query.executeRecordExists(connection, body)) {
-          logger.info("Update parameters: {} = {}", primaryKey, primaryValue.toString());
-          query.executeUpdate(connection, tableName, primaryKey, primaryValue.toString(), body);
-        } else {
-          logger.info("Insert parameters: {} = {}", primaryKey, primaryValue.toString());
-          query.executeInsert(connection, tableName, body);
-        }
+        logger.info("Execute upsert parameters by PK: {} = {}", primaryKey, primaryValue.toString());
+        query.from(tableName).executeUpsert(connection, primaryKey, body);
         logger.info("Emit data= {}", body.toString());
         parameters.getEventEmitter().emitData(new Message.Builder().body(body).build());
         snapshot = Json.createObjectBuilder().add(PROPERTY_TABLE_NAME, tableName).build();

@@ -135,4 +135,58 @@ public class Oracle extends Query {
     stmt.execute();
   }
 
+  public void executeUpsert(Connection connection, String idColumn, JsonObject body)
+      throws SQLException {
+    validateQuery();
+    StringBuilder keys = new StringBuilder();
+    StringBuilder values = new StringBuilder();
+    StringBuilder setString = new StringBuilder();
+    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+      if (!entry.getKey().equals(idColumn)) {
+        if (setString.length() > 0) {
+          setString.append(",");
+        }
+        setString.append(entry.getKey()).append(" = ?");
+      }
+      if (keys.length() > 0) {
+        keys.append(",");
+      }
+      keys.append(entry.getKey());
+      if (values.length() > 0) {
+        values.append(",");
+      }
+      values.append("?");
+    }
+    String sql = "BEGIN " +
+        " INSERT INTO " + tableName +
+        " ("+ keys.toString() + ")" +
+        " VALUES (" + values.toString() + ");" +
+        " EXCEPTION" +
+        " WHEN DUP_VAL_ON_INDEX THEN" +
+        " UPDATE " + tableName +
+        " SET " + setString.toString() +
+        " WHERE " + idColumn + " = ?;" +
+        " END;";
+    PreparedStatement stmt = null;
+    try {
+      stmt = connection.prepareStatement(sql);
+      int i = 1;
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
+      }
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        if (!entry.getKey().equals(idColumn)) {
+          Utils.setStatementParam(stmt, i, entry.getKey(), body);
+          i++;
+        }
+      }
+      Utils.setStatementParam(stmt, i, idColumn, body);
+      stmt.execute();
+    } finally {
+      if (stmt != null) {
+        stmt.close();
+      }
+    }
+  }
 }

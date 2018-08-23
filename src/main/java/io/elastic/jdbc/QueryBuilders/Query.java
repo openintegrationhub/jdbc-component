@@ -65,6 +65,9 @@ public abstract class Query {
   abstract public void executeUpdate(Connection connection, String tableName, String idColumn,
       String idValue, JsonObject body) throws SQLException;
 
+  abstract public void executeUpsert(Connection connection, String idColumn,
+      JsonObject body) throws SQLException;
+
   abstract public ResultSet executeSelectQuery(Connection connection, String sqlQuery,
       JsonObject body) throws SQLException;
 
