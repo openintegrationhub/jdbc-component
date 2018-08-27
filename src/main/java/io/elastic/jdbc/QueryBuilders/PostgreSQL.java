@@ -95,7 +95,7 @@ public class PostgreSQL extends Query {
         " FROM " + tableName +
         " WHERE " + lookupField + " = ?";
     PreparedStatement stmt = connection.prepareStatement(sql);
-      Utils.setStatementParam(stmt, 1, lookupField, body);
+    Utils.setStatementParam(stmt, 1, lookupField, body);
     ResultSet rs = stmt.executeQuery();
     rs.next();
     return rs.getInt(1) > 0;
@@ -174,11 +174,11 @@ public class PostgreSQL extends Query {
       values.append("?");
     }
     String sql = "INSERT INTO " + tableName +
-        " ("+ keys.toString() + ")" +
-        " VALUES (" + values.toString() + ");" +
+        " (" + keys.toString() + ")" +
+        " VALUES (" + values.toString() + ")" +
         " ON CONFLICT (" + idColumn + ")" +
         " DO UPDATE " +
-        " SET " + setString.toString();
+        " SET " + setString.toString() + ";";
     PreparedStatement stmt = null;
     try {
       stmt = connection.prepareStatement(sql);

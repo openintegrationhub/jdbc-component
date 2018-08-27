@@ -15,33 +15,21 @@ public class MSSQL extends Query {
   public ResultSet executeSelectQuery(Connection connection, String sqlQuery, JsonObject body)
       throws SQLException {
     PreparedStatement stmt = connection.prepareStatement(sqlQuery);
-    try {
-      int i = 1;
-      for (Entry<String, JsonValue> entry : body.entrySet()) {
-        Utils.setStatementParam(stmt, i, entry.getKey(), body);
-        i++;
-      }
-      return stmt.executeQuery();
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
+    int i = 1;
+    for (Entry<String, JsonValue> entry : body.entrySet()) {
+      Utils.setStatementParam(stmt, i, entry.getKey(), body);
+      i++;
     }
+    return stmt.executeQuery();
   }
 
   public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)
       throws SQLException {
     PreparedStatement stmt = connection.prepareStatement(sqlQuery);
-    try {
-      if (pollingValue != null) {
-        stmt.setTimestamp(1, pollingValue);
-      }
-      return stmt.executeQuery();
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
+    if (pollingValue != null) {
+      stmt.setTimestamp(1, pollingValue);
     }
+    return stmt.executeQuery();
   }
 
   public ResultSet executePolling(Connection connection) throws SQLException {
@@ -59,16 +47,10 @@ public class MSSQL extends Query {
         " WHERE RowNum > ?" +
         " AND RowNum < ?";
     PreparedStatement stmt = connection.prepareStatement(sql);
-    try {
-      stmt.setTimestamp(1, pollingValue);
-      stmt.setInt(2, skipNumber);
-      stmt.setInt(3, countNumber + skipNumber);
-      return stmt.executeQuery();
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-    }
+    stmt.setTimestamp(1, pollingValue);
+    stmt.setInt(2, skipNumber);
+    stmt.setInt(3, countNumber + skipNumber);
+    return stmt.executeQuery();
   }
 
   public ResultSet executeLookup(Connection connection, JsonObject body) throws SQLException {
@@ -86,18 +68,12 @@ public class MSSQL extends Query {
         " WHERE RowNum > ?" +
         " AND RowNum < ?";
     PreparedStatement stmt = connection.prepareStatement(sql);
-    try {
-      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-        Utils.setStatementParam(stmt, 1, entry.getKey(), body);
-      }
-      stmt.setInt(2, skipNumber);
-      stmt.setInt(3, countNumber + skipNumber);
-      return stmt.executeQuery();
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
+    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+      Utils.setStatementParam(stmt, 1, entry.getKey(), body);
     }
+    stmt.setInt(2, skipNumber);
+    stmt.setInt(3, countNumber + skipNumber);
+    return stmt.executeQuery();
   }
 
   public int executeDelete(Connection connection, JsonObject body) throws SQLException {
@@ -106,14 +82,8 @@ public class MSSQL extends Query {
         " FROM " + tableName +
         " WHERE " + lookupField + " = ?";
     PreparedStatement stmt = connection.prepareStatement(sql);
-    try {
-      stmt.setString(1, lookupValue);
-      return stmt.executeUpdate();
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-    }
+    stmt.setString(1, lookupValue);
+    return stmt.executeUpdate();
   }
 
   public boolean executeRecordExists(Connection connection, JsonObject body) throws SQLException {
@@ -167,7 +137,8 @@ public class MSSQL extends Query {
     }
   }
 
-  public void executeUpsert(Connection connection, String idColumn, JsonObject body) throws SQLException {
+  public void executeUpsert(Connection connection, String idColumn, JsonObject body)
+      throws SQLException {
     validateQuery();
 
     StringBuilder keys = new StringBuilder();
@@ -195,8 +166,8 @@ public class MSSQL extends Query {
         " UPDATE " + tableName +
         " SET " + setString.toString() +
         " WHERE " + idColumn + " = ?" +
-        " ELSE INSERT INTO "+ tableName +
-        " ("+ keys.toString() + ")" +
+        " ELSE INSERT INTO " + tableName +
+        " (" + keys.toString() + ")" +
         " VALUES (" + values.toString() + ")" +
         " COMMIT;";
     PreparedStatement stmt = null;
@@ -213,8 +184,8 @@ public class MSSQL extends Query {
       Utils.setStatementParam(stmt, i, idColumn, body);
       i++;
       for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-          Utils.setStatementParam(stmt, i, entry.getKey(), body);
-          i++;
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
       }
       stmt.execute();
     } finally {

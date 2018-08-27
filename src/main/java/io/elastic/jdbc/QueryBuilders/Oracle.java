@@ -159,7 +159,7 @@ public class Oracle extends Query {
     }
     String sql = "BEGIN " +
         " INSERT INTO " + tableName +
-        " ("+ keys.toString() + ")" +
+        " (" + keys.toString() + ")" +
         " VALUES (" + values.toString() + ");" +
         " EXCEPTION" +
         " WHEN DUP_VAL_ON_INDEX THEN" +
