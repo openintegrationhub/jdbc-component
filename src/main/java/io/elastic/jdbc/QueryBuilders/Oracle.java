@@ -142,12 +142,10 @@ public class Oracle extends Query {
     StringBuilder values = new StringBuilder();
     StringBuilder setString = new StringBuilder();
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      if (!entry.getKey().equals(idColumn)) {
         if (setString.length() > 0) {
           setString.append(",");
         }
         setString.append(entry.getKey()).append(" = ?");
-      }
       if (keys.length() > 0) {
         keys.append(",");
       }
@@ -176,10 +174,8 @@ public class Oracle extends Query {
         i++;
       }
       for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-        if (!entry.getKey().equals(idColumn)) {
           Utils.setStatementParam(stmt, i, entry.getKey(), body);
           i++;
-        }
       }
       Utils.setStatementParam(stmt, i, idColumn, body);
       stmt.execute();

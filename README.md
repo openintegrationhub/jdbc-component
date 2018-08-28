@@ -142,12 +142,15 @@ Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty respon
 As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
 
 ## Current limitations
-1. Composite primary key is not supported.
+1. Only tables with one [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY") is supported. Message ``Table has not Primary Key. Should be one Primary Key
+`` should be displayed if the table without any primary key will be selected and message ``Composite Primary Key is not supported
+`` should be displayed if the table with composite primary key will be selected.
 2. Only following versions of DataBase are supported:
-- MySQL - compatible with MySQL Server 5.5, 5.6, 5.7 and 8.0.
-- PostgreSQL - compatible with PostgreSQL 8.2 and higher
-- Oracle - compatible with Oracle Database 8.1.7 - 12.1.0.2
-- MSSQL - compatible with Microsoft SQL Server 2008 R2 and higher
+- ``MySQL`` - compatible with MySQL Server 5.5, 5.6, 5.7 and 8.0.
+- ``PostgreSQL`` - compatible with PostgreSQL 8.2 and higher
+- ``Oracle`` - compatible with Oracle Database 8.1.7 - 12.1.0.2
+- ``MSSQL`` - compatible with Microsoft SQL Server 2008 R2 and higher
+3. For Action "Upsert by primary key" metadata analysis ignores nullable/non-nullable fields, it will be throw SQL Server exception ``Cannot insert the value NULL into...`` if non-nullable fields don't fill for Insert operation. 
 
 ## Known issues
 No known issues are there yet.
