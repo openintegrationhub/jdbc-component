@@ -4,10 +4,14 @@ import io.elastic.jdbc.Utils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
+import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
 public class PostgreSQL extends Query {
@@ -21,6 +25,29 @@ public class PostgreSQL extends Query {
       i++;
     }
     return stmt.executeQuery();
+  }
+
+  public ArrayList executeSelectQueryNew(Connection connection, String sqlQuery, JsonObject body)
+      throws SQLException {
+    try (PreparedStatement stmt = connection.prepareStatement(sqlQuery)) {
+      int i = 1;
+      for (Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
+      }
+      try (ResultSet rs = stmt.executeQuery()) {
+        JsonObjectBuilder row = Json.createObjectBuilder();
+        ArrayList listResult= new ArrayList();
+        ResultSetMetaData metaData = rs.getMetaData();
+        while (rs.next()) {
+          for (i = 1; i <= metaData.getColumnCount(); i++) {
+            row = Utils.getColumnDataByType(rs, metaData, i, row);
+          }
+          listResult.add(row.build());
+        }
+        return listResult;
+      }
+    }
   }
 
   public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)
@@ -109,13 +136,14 @@ public class PostgreSQL extends Query {
     String sql = "INSERT INTO " + tableName +
         " (" + keys.toString() + ")" +
         " VALUES (" + values.toString() + ")";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    int i = 1;
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), body);
-      i++;
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      int i = 1;
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
+      }
+      stmt.execute();
     }
-    stmt.execute();
   }
 
   public void executeUpdate(Connection connection, String tableName, String idColumn,
@@ -131,14 +159,15 @@ public class PostgreSQL extends Query {
     String sql = "UPDATE " + tableName +
         " SET " + setString.toString() +
         " WHERE " + idColumn + " = ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    int i = 1;
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), body);
-      i++;
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      int i = 1;
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
+      }
+      Utils.setStatementParam(stmt, i, idColumn, body);
+      stmt.execute();
     }
-    Utils.setStatementParam(stmt, i, idColumn, body);
-    stmt.execute();
   }
 
   public void executeUpsert(Connection connection, String idColumn, JsonObject body)

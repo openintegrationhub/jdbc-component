@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import javax.json.JsonObject;
 
 public abstract class Query {
@@ -83,6 +84,9 @@ public abstract class Query {
       JsonObject body) throws SQLException;
 
   abstract public ResultSet executeSelectQuery(Connection connection, String sqlQuery,
+      JsonObject body) throws SQLException;
+
+  abstract public ArrayList executeSelectQueryNew(Connection connection, String sqlQuery,
       JsonObject body) throws SQLException;
 
   abstract public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)

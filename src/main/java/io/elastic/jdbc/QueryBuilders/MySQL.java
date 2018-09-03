@@ -4,10 +4,14 @@ import io.elastic.jdbc.Utils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
+import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
 public class MySQL extends Query {
@@ -22,6 +26,30 @@ public class MySQL extends Query {
       i++;
     }
     return stmt.executeQuery();
+  }
+
+  public ArrayList executeSelectQueryNew(Connection connection, String sqlQuery, JsonObject body)
+      throws SQLException {
+    StringBuilder sql = new StringBuilder(sqlQuery);
+    try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
+      int i = 1;
+      for (Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), (entry.getValue() != null) ? body : null);
+        i++;
+      }
+      try (ResultSet rs = stmt.executeQuery()) {
+        JsonObjectBuilder row = Json.createObjectBuilder();
+        ArrayList listResult= new ArrayList();
+        ResultSetMetaData metaData = rs.getMetaData();
+        while (rs.next()) {
+          for (i = 1; i <= metaData.getColumnCount(); i++) {
+            row = Utils.getColumnDataByType(rs, metaData, i, row);
+          }
+          listResult.add(row.build());
+        }
+        return listResult;
+      }
+    }
   }
 
   public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)
@@ -101,13 +129,14 @@ public class MySQL extends Query {
     String sql = "INSERT INTO " + tableName +
         " (" + keys.toString() + ")" +
         " VALUES (" + values.toString() + ")";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    int i = 1;
-    for (String key : body.keySet()) {
-      Utils.setStatementParam(stmt, i, key, body);
-      i++;
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      int i = 1;
+      for (String key : body.keySet()) {
+        Utils.setStatementParam(stmt, i, key, body);
+        i++;
+      }
+      stmt.execute();
     }
-    stmt.execute();
   }
 
   public void executeUpdate(Connection connection, String tableName, String idColumn,
@@ -123,14 +152,15 @@ public class MySQL extends Query {
     String sql = "UPDATE " + tableName +
         " SET " + setString.toString() +
         " WHERE " + idColumn + " = ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    int i = 1;
-    for (String key : body.keySet()) {
-      Utils.setStatementParam(stmt, i, key, body);
-      i++;
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      int i = 1;
+      for (String key : body.keySet()) {
+        Utils.setStatementParam(stmt, i, key, body);
+        i++;
+      }
+      Utils.setStatementParam(stmt, i, idColumn, body);
+      stmt.execute();
     }
-    Utils.setStatementParam(stmt, i, idColumn, body);
-    stmt.execute();
   }
 
   public void executeUpsert(Connection connection, String idColumn, JsonObject body)
@@ -157,7 +187,7 @@ public class MySQL extends Query {
         " (" + keys.toString() + ")" +
         " VALUES (" + values.toString() + ")" +
         " ON DUPLICATE KEY UPDATE " + setString + ";";
-    try (PreparedStatement stmt = connection.prepareStatement(sql)){
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       int i = 1;
       int countBodyEntry = body.size();
       for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
