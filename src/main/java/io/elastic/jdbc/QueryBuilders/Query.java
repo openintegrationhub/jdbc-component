@@ -18,6 +18,19 @@ public abstract class Query {
   protected String lookupField = null;
   protected String lookupValue = null;
 
+  public static String preProcessSelect(String sqlQuery) {
+    sqlQuery = sqlQuery.trim();
+    if (!isSelect(sqlQuery)) {
+      throw new RuntimeException("Unresolvable SELECT query");
+    }
+    return sqlQuery.replaceAll(Utils.VARS_REGEXP, "?");
+  }
+
+  public static boolean isSelect(String sqlQuery) {
+    String pattern = "select";
+    return sqlQuery.toLowerCase().startsWith(pattern);
+  }
+
   public Query skip(Integer skip) {
     this.skipNumber = skip;
     return this;
@@ -55,7 +68,8 @@ public abstract class Query {
   abstract public ResultSet executeLookup(Connection connection, JsonObject body)
       throws SQLException;
 
-  abstract public boolean executeRecordExists(Connection connection, JsonObject body) throws SQLException;
+  abstract public boolean executeRecordExists(Connection connection, JsonObject body)
+      throws SQLException;
 
   abstract public int executeDelete(Connection connection, JsonObject body) throws SQLException;
 
@@ -78,19 +92,6 @@ public abstract class Query {
     if (tableName == null) {
       throw new RuntimeException("Table name is required field");
     }
-  }
-
-  public static String preProcessSelect(String sqlQuery) {
-    sqlQuery = sqlQuery.trim();
-    if (!isSelect(sqlQuery)) {
-      throw new RuntimeException("Unresolvable SELECT query");
-    }
-    return sqlQuery.replaceAll(Utils.VARS_REGEXP, "?");
-  }
-
-  public static boolean isSelect(String sqlQuery) {
-    String pattern = "select";
-    return sqlQuery.toLowerCase().startsWith(pattern);
   }
 
 }

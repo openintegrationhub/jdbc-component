@@ -1,6 +1,5 @@
 package io.elastic.jdbc;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
@@ -18,7 +17,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
@@ -27,16 +25,15 @@ import org.slf4j.LoggerFactory;
 
 public class Utils {
 
-  private static final Logger logger = LoggerFactory.getLogger(Utils.class);
-
   public static final String CFG_DATABASE_NAME = "databaseName";
   public static final String CFG_PASSWORD = "password";
   public static final String CFG_PORT = "port";
   public static final String CFG_DB_ENGINE = "dbEngine";
   public static final String CFG_HOST = "host";
   public static final String CFG_USER = "user";
-  public static Map<String, String> columnTypes = null;
   public static final String VARS_REGEXP = "@([\\w_$][\\d\\w_$]*(:(string|boolean|date|number|bigint|float|real))?)";
+  private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
+  public static Map<String, String> columnTypes = null;
 
   public static Connection getConnection(final JsonObject config) {
     final String engine = getRequiredNonEmptyString(config, CFG_DB_ENGINE, "Engine is required")
@@ -50,7 +47,7 @@ public class Utils {
         "Database name is required");
     engineType.loadDriverClass();
     final String connectionString = engineType.getConnectionString(host, port, databaseName);
-    logger.info("Connecting to {}", connectionString);
+    LOGGER.info("Connecting to {}", connectionString);
     try {
       return DriverManager.getConnection(connectionString, user, password);
     } catch (Exception e) {
@@ -86,7 +83,7 @@ public class Utils {
         }
       }
     } catch (NullPointerException | ClassCastException e) {
-      logger.info("key {} doesn't have any mapping: {}", key, e);
+      LOGGER.info("key {} doesn't have any mapping: {}", key, e);
     }
     return value.toString().replaceAll("\"", "");
   }
@@ -100,7 +97,7 @@ public class Utils {
   }
 
   public static void setStatementParam(PreparedStatement statement, int paramNumber, String colName,
-                                       JsonObject body) throws SQLException {
+      JsonObject body) throws SQLException {
     try {
       if (isNumeric(colName)) {
         if (body.get(colName) != null) {
@@ -135,8 +132,8 @@ public class Utils {
       }
     } catch (java.lang.NumberFormatException e) {
       String message = String
-              .format("Provided data: %s can't be cast to the column %s datatype",body.get(colName),
-                      colName);
+          .format("Provided data: %s can't be cast to the column %s datatype", body.get(colName),
+              colName);
       throw new RuntimeException(message);
     }
   }
@@ -156,9 +153,11 @@ public class Utils {
     if (sqlType == Types.BIT || sqlType == Types.BOOLEAN) {
       return "boolean";
     }
-    if (sqlType == Types.OTHER)
-      if (sqlTypeName.toLowerCase().contains("timestamp"))
+    if (sqlType == Types.OTHER) {
+      if (sqlTypeName.toLowerCase().contains("timestamp")) {
         return "timestamp";
+      }
+    }
     return "string";
   }
 
@@ -211,7 +210,7 @@ public class Utils {
         try {
           rs.close();
         } catch (Exception e) {
-          logger.error(e.toString());
+          LOGGER.error(e.toString());
         }
       }
     }
@@ -295,7 +294,7 @@ public class Utils {
           break;
       }
     } catch (SQLException | java.lang.NullPointerException e) {
-      logger.error("Failed to get data by type", e.toString());
+      LOGGER.error("Failed to get data by type", e.toString());
       throw new RuntimeException(e);
     }
     return row;

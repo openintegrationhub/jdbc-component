@@ -14,7 +14,6 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
@@ -24,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 public class GetRowsPollingTrigger implements Module {
 
-  private static final Logger logger = LoggerFactory.getLogger(GetRowsPollingTrigger.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(GetRowsPollingTrigger.class);
   private static final String PROPERTY_TABLE_NAME = "tableName";
   private static final String PROPERTY_POLLING_FIELD = "pollingField";
   private static final String PROPERTY_POLLING_VALUE = "pollingValue";
@@ -32,10 +31,10 @@ public class GetRowsPollingTrigger implements Module {
   private static final String PROPERTY_SKIP_NUMBER = "skipNumber";
   private static final String DATETIME_REGEX = "(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2})(\\.(\\d{1,3}))?";
   private static boolean isEmpty = true;
-  
+
   @Override
   public final void execute(ExecutionParameters parameters) {
-    logger.info("About to execute select trigger");
+    LOGGER.info("About to execute select trigger");
     final JsonObject configuration = parameters.getConfiguration();
     JsonObject snapshot = parameters.getSnapshot();
     JsonObjectBuilder row = Json.createObjectBuilder();
@@ -50,7 +49,7 @@ public class GetRowsPollingTrigger implements Module {
 
     String dbEngine = configuration.getString(Utils.CFG_DB_ENGINE);
     String tableName = configuration.getString(PROPERTY_TABLE_NAME);
-    if(Utils.getNonNullString(configuration, PROPERTY_POLLING_FIELD).length() != 0) {
+    if (Utils.getNonNullString(configuration, PROPERTY_POLLING_FIELD).length() != 0) {
       pollingField = configuration.getString(PROPERTY_POLLING_FIELD);
     }
     Timestamp pollingValue;
@@ -58,27 +57,31 @@ public class GetRowsPollingTrigger implements Module {
     Timestamp maxPollingValue = cts;
     String formattedDate = new SimpleDateFormat(PROPERTY_DATETIME_FORMAT).format(cts);
 
-    if (configuration.containsKey(PROPERTY_POLLING_VALUE) && Utils.getNonNullString(configuration, PROPERTY_POLLING_VALUE).matches(DATETIME_REGEX)) {
+    if (configuration.containsKey(PROPERTY_POLLING_VALUE) && Utils
+        .getNonNullString(configuration, PROPERTY_POLLING_VALUE).matches(DATETIME_REGEX)) {
       pollingValue = Timestamp.valueOf(configuration.getString(PROPERTY_POLLING_VALUE));
-    } else if (snapshot.containsKey(PROPERTY_POLLING_VALUE) && Utils.getNonNullString(snapshot, PROPERTY_POLLING_VALUE).matches(DATETIME_REGEX)) {
+    } else if (snapshot.containsKey(PROPERTY_POLLING_VALUE) && Utils
+        .getNonNullString(snapshot, PROPERTY_POLLING_VALUE).matches(DATETIME_REGEX)) {
       pollingValue = Timestamp.valueOf(snapshot.getString(PROPERTY_POLLING_VALUE));
     } else {
-      logger.info(
+      LOGGER.info(
           "There is an empty value for Start Polling From at the config and snapshot. So, we set Current Date = "
               + formattedDate);
       pollingValue = cts;
     }
 
-    if (snapshot.containsKey(PROPERTY_SKIP_NUMBER))
+    if (snapshot.containsKey(PROPERTY_SKIP_NUMBER)) {
       skipNumber = snapshot.getInt(PROPERTY_SKIP_NUMBER);
+    }
 
-    if (snapshot.containsKey(PROPERTY_TABLE_NAME) && snapshot.get(PROPERTY_TABLE_NAME) != null && !snapshot.getString(PROPERTY_TABLE_NAME)
+    if (snapshot.containsKey(PROPERTY_TABLE_NAME) && snapshot.get(PROPERTY_TABLE_NAME) != null
+        && !snapshot.getString(PROPERTY_TABLE_NAME)
         .equals(tableName)) {
       skipNumber = 0;
     }
 
     ResultSet rs = null;
-    logger.info("Executing row polling trigger");
+    LOGGER.info("Executing row polling trigger");
     try {
       QueryFactory queryFactory = new QueryFactory();
       Query query = queryFactory.getQuery(dbEngine);
@@ -107,7 +110,7 @@ public class GetRowsPollingTrigger implements Module {
 
       if (rowsCount == 0) {
         row.add("empty dataset", "no data");
-        logger.info("Emitting empty data");
+        LOGGER.info("Emitting empty data");
         maxPollingValue = new java.sql.Timestamp(System.currentTimeMillis());
         parameters.getEventEmitter().emitData(new Message.Builder().body(row.build()).build());
       }
@@ -115,27 +118,27 @@ public class GetRowsPollingTrigger implements Module {
       formattedDate = new SimpleDateFormat(PROPERTY_DATETIME_FORMAT).format(maxPollingValue);
 
       snapshot = Json.createObjectBuilder().add(PROPERTY_SKIP_NUMBER, skipNumber + rowsCount)
-                                           .add(PROPERTY_TABLE_NAME, tableName)
-                                           .add(PROPERTY_POLLING_FIELD, pollingField)
-                                           .add(PROPERTY_POLLING_VALUE, formattedDate).build();
-      logger.info("Emitting new snapshot {}", snapshot.toString());
+          .add(PROPERTY_TABLE_NAME, tableName)
+          .add(PROPERTY_POLLING_FIELD, pollingField)
+          .add(PROPERTY_POLLING_VALUE, formattedDate).build();
+      LOGGER.info("Emitting new snapshot {}", snapshot.toString());
       parameters.getEventEmitter().emitSnapshot(snapshot);
     } catch (SQLException e) {
-      logger.error("Failed to make request", e.toString());
+      LOGGER.error("Failed to make request", e.toString());
       throw new RuntimeException(e);
     } finally {
       if (rs != null) {
         try {
           rs.close();
         } catch (SQLException e) {
-          logger.error("Failed to close result set", e.toString());
+          LOGGER.error("Failed to close result set", e.toString());
         }
       }
       if (connection != null) {
         try {
           connection.close();
         } catch (SQLException e) {
-          logger.error("Failed to close connection", e.toString());
+          LOGGER.error("Failed to close connection", e.toString());
         }
       }
     }

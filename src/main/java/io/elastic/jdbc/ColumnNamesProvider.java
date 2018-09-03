@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModelProvider {
 
-  private static final Logger logger = LoggerFactory.getLogger(ColumnNamesProvider.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(ColumnNamesProvider.class);
 
   @Override
   public JsonObject getSelectModel(JsonObject configuration) {
@@ -97,14 +97,14 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
         try {
           rs.close();
         } catch (SQLException e) {
-          logger.error("Failed to close result set {}", e);
+          LOGGER.error("Failed to close result set {}", e);
         }
       }
       if (connection != null) {
         try {
           connection.close();
         } catch (SQLException e) {
-          logger.error("Failed to close connection {}", e);
+          LOGGER.error("Failed to close connection {}", e);
         }
       }
     }

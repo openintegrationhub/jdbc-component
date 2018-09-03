@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 public class SelectAction implements Module {
 
-  private static final Logger logger = LoggerFactory.getLogger(SelectAction.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SelectAction.class);
   private static final String SQL_QUERY_VALUE = "sqlQuery";
   private static final String PROPERTY_NULLABLE_RESULT = "nullableResult";
   private static final String PROPERTY_SKIP_NUMBER = "skipNumber";
@@ -49,40 +49,40 @@ public class SelectAction implements Module {
     }
 
     Utils.columnTypes = Utils.getVariableTypes(sqlQuery);
-    logger.info("Detected column types: " + Utils.columnTypes);
+    LOGGER.info("Detected column types: " + Utils.columnTypes);
     ResultSet rs = null;
-    logger.info("Executing select trigger");
+    LOGGER.info("Executing select trigger");
     try {
       QueryFactory queryFactory = new QueryFactory();
       Query query = queryFactory.getQuery(dbEngine);
       sqlQuery = Query.preProcessSelect(sqlQuery);
-      logger.info("SQL Query: {}", sqlQuery);
+      LOGGER.info("SQL Query: {}", sqlQuery);
       rs = query.executeSelectQuery(connection, sqlQuery, body);
       ResultSetMetaData metaData = rs.getMetaData();
       while (rs.next()) {
-        logger.info("columns count: {} from {}", rowsCount, metaData.getColumnCount());
+        LOGGER.info("columns count: {} from {}", rowsCount, metaData.getColumnCount());
         for (int i = 1; i <= metaData.getColumnCount(); i++) {
           row = Utils.getColumnDataByType(rs, metaData, i, row);
         }
         rowsCount++;
-        logger.info("Emitting data");
-        logger.info(row.toString());
+        LOGGER.info("Emitting data");
+        LOGGER.info(row.toString());
         parameters.getEventEmitter().emitData(new Message.Builder().body(row.build()).build());
       }
 
       if (rowsCount == 0 && nullableResult) {
         row.add("empty dataset", "no data");
-        logger.info("Emitting data");
+        LOGGER.info("Emitting data");
         parameters.getEventEmitter().emitData(new Message.Builder().body(row.build()).build());
       } else if (rowsCount == 0 && !nullableResult) {
-        logger.info("Empty response. Error message will be returned");
+        LOGGER.info("Empty response. Error message will be returned");
         throw new RuntimeException("Empty response");
       }
 
       snapshot = Json.createObjectBuilder().add(PROPERTY_SKIP_NUMBER, skipNumber + rowsCount)
           .add(SQL_QUERY_VALUE, sqlQuery)
           .add(PROPERTY_NULLABLE_RESULT, nullableResult).build();
-      logger.info("Emitting new snapshot {}", snapshot.toString());
+      LOGGER.info("Emitting new snapshot {}", snapshot.toString());
       parameters.getEventEmitter().emitSnapshot(snapshot);
     } catch (SQLException e) {
       throw new RuntimeException(e);
@@ -91,7 +91,7 @@ public class SelectAction implements Module {
         try {
           connection.close();
         } catch (SQLException e) {
-          logger.error(e.toString());
+          LOGGER.error(e.toString());
         }
       }
     }

@@ -15,9 +15,11 @@ import javax.json.JsonValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ColumnNamesWithPrimaryKeyProvider implements DynamicMetadataProvider, SelectModelProvider {
+public class ColumnNamesWithPrimaryKeyProvider implements DynamicMetadataProvider,
+    SelectModelProvider {
 
-  private static final Logger logger = LoggerFactory.getLogger(ColumnNamesWithPrimaryKeyProvider.class);
+  private static final Logger LOGGER = LoggerFactory
+      .getLogger(ColumnNamesWithPrimaryKeyProvider.class);
 
   @Override
   public JsonObject getSelectModel(JsonObject configuration) {
@@ -73,9 +75,8 @@ public class ColumnNamesWithPrimaryKeyProvider implements DynamicMetadataProvide
         JsonObjectBuilder field = Json.createObjectBuilder();
         String name = rs.getString("COLUMN_NAME");
         Boolean isRequired = false;
-        while (rsPrimaryKeys.next()){
-          if (rsPrimaryKeys.getString("COLUMN_NAME").equals(name))
-          {
+        while (rsPrimaryKeys.next()) {
+          if (rsPrimaryKeys.getString("COLUMN_NAME").equals(name)) {
             isRequired = true;
             break;
           }
@@ -97,21 +98,21 @@ public class ColumnNamesWithPrimaryKeyProvider implements DynamicMetadataProvide
         try {
           rs.close();
         } catch (SQLException e) {
-          logger.error("Failed to close result set {}", e);
+          LOGGER.error("Failed to close result set {}", e);
         }
       }
-      if (rsPrimaryKeys!= null) {
+      if (rsPrimaryKeys != null) {
         try {
           rsPrimaryKeys.close();
         } catch (SQLException e) {
-          logger.error("Failed to close result set {}", e);
+          LOGGER.error("Failed to close result set {}", e);
         }
       }
       if (connection != null) {
         try {
           connection.close();
         } catch (SQLException e) {
-          logger.error("Failed to close connection {}", e);
+          LOGGER.error("Failed to close connection {}", e);
         }
       }
     }
