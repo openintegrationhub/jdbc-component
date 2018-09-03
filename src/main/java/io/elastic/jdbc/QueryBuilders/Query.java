@@ -65,7 +65,7 @@ public abstract class Query {
 
   abstract public ResultSet executePolling(Connection connection) throws SQLException;
 
-  abstract public ResultSet executeLookup(Connection connection, JsonObject body)
+  abstract public JsonObject executeLookup(Connection connection, JsonObject body)
       throws SQLException;
 
   abstract public boolean executeRecordExists(Connection connection, JsonObject body)

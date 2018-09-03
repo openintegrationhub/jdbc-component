@@ -53,7 +53,7 @@ public class PostgreSQL extends Query {
     return stmt.executeQuery();
   }
 
-  public ResultSet executeLookup(Connection connection, JsonObject body) throws SQLException {
+  public JsonObject executeLookup(Connection connection, JsonObject body) throws SQLException {
     validateQuery();
     String sql = "WITH results_cte AS" +
         "(" +
@@ -67,14 +67,7 @@ public class PostgreSQL extends Query {
         " FROM results_cte" +
         " WHERE rownum > ?" +
         " AND rownum < ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    //stmt.setString(1, lookupValue);
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, 1, entry.getKey(), body);
-    }
-    stmt.setInt(2, skipNumber);
-    stmt.setInt(3, countNumber + skipNumber);
-    return stmt.executeQuery();
+    return Utils.getLookupRow(connection, body, sql, skipNumber, countNumber + skipNumber);
   }
 
   public int executeDelete(Connection connection, JsonObject body) throws SQLException {
@@ -82,11 +75,12 @@ public class PostgreSQL extends Query {
     String sql = "DELETE" +
         " FROM " + tableName +
         " WHERE " + lookupField + " = ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, 1, entry.getKey(), body);
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, 1, entry.getKey(), body);
+      }
+      return stmt.executeUpdate();
     }
-    return stmt.executeUpdate();
   }
 
   public boolean executeRecordExists(Connection connection, JsonObject body) throws SQLException {

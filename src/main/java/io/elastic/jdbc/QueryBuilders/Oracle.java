@@ -48,29 +48,24 @@ public class Oracle extends Query {
     return stmt.executeQuery();
   }
 
-  public ResultSet executeLookup(Connection connection, JsonObject body) throws SQLException {
+  public JsonObject executeLookup(Connection connection, JsonObject body) throws SQLException {
     validateQuery();
     String sql = "SELECT * FROM " +
         "(SELECT  b.*, rank() OVER (ORDER BY " + lookupField + ") AS rnk FROM " +
         tableName + " b) WHERE " + lookupField + " = ? " +
         "AND rnk BETWEEN ? AND ? " +
         "ORDER BY " + lookupField;
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, 1, entry.getKey(), body);
-    }
-    stmt.setInt(2, skipNumber);
-    stmt.setInt(3, countNumber);
-    return stmt.executeQuery();
+    return Utils.getLookupRow(connection, body, sql, skipNumber, countNumber);
   }
 
   public int executeDelete(Connection connection, JsonObject body) throws SQLException {
     String sql = "DELETE" +
         " FROM " + tableName +
         " WHERE " + lookupField + " = ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    stmt.setString(1, lookupValue);
-    return stmt.executeUpdate();
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      stmt.setString(1, lookupValue);
+      return stmt.executeUpdate();
+    }
   }
 
   public boolean executeRecordExists(Connection connection, JsonObject body) throws SQLException {
