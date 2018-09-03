@@ -86,17 +86,7 @@ public class MSSQL extends Query {
     String sql = "SELECT COUNT(*)" +
         " FROM " + tableName +
         " WHERE " + lookupField + " = ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    try {
-      Utils.setStatementParam(stmt, 1, lookupField, body);
-      ResultSet rs = stmt.executeQuery();
-      rs.next();
-      return rs.getInt(1) > 0;
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-    }
+    return Utils.isRecordExists(connection, body, sql, lookupField);
   }
 
   public void executeInsert(Connection connection, String tableName, JsonObject body)

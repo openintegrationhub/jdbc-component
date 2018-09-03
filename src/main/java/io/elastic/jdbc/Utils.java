@@ -329,4 +329,14 @@ public class Utils {
     }
   }
 
+  public static boolean isRecordExists (Connection connection, JsonObject body, String sql, String lookupField) throws SQLException{
+    try (PreparedStatement stmt = connection.prepareStatement(sql)){
+      Utils.setStatementParam(stmt, 1, lookupField, body);
+      try (ResultSet rs = stmt.executeQuery()) {
+        rs.next();
+        return rs.getInt(1) > 0;
+      }
+    }
+  }
+
 }
