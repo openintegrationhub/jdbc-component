@@ -132,6 +132,30 @@ public class MSSQL extends Query {
     }
   }
 
+  public void executeUpdate(Connection connection, String tableName, String idColumn,
+      String idValue, JsonObject body) throws SQLException {
+    validateQuery();
+    StringBuilder setString = new StringBuilder();
+    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+      if (setString.length() > 0) {
+        setString.append(",");
+      }
+      setString.append(entry.getKey()).append(" = ?");
+    }
+    String sql = "UPDATE " + tableName +
+        " SET " + setString.toString() +
+        " WHERE " + idColumn + " = ?";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      int i = 1;
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
+      }
+      Utils.setStatementParam(stmt, i, idColumn, body);
+      stmt.execute();
+    }
+  }
+
   public void executeUpsert(Connection connection, String idColumn, JsonObject body)
       throws SQLException {
     validateQuery();
@@ -163,55 +187,20 @@ public class MSSQL extends Query {
         " (" + keys.toString() + ")" +
         " VALUES (" + values.toString() + ")" +
         " COMMIT;";
-    PreparedStatement stmt = null;
-    try {
-      stmt = connection.prepareStatement(sql);
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       Utils.setStatementParam(stmt, 1, idColumn, body);
       int i = 2;
       for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
         Utils.setStatementParam(stmt, i, entry.getKey(), body);
         i++;
       }
-      Utils.setStatementParam(stmt, i, idColumn, body);
-      i++;
+      Utils.setStatementParam(stmt, i++, idColumn, body);
       for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
         Utils.setStatementParam(stmt, i, entry.getKey(), body);
         i++;
       }
       stmt.execute();
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
     }
   }
 
-  public void executeUpdate(Connection connection, String tableName, String idColumn,
-      String idValue, JsonObject body) throws SQLException {
-    validateQuery();
-    StringBuilder setString = new StringBuilder();
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      if (setString.length() > 0) {
-        setString.append(",");
-      }
-      setString.append(entry.getKey()).append(" = ?");
-    }
-    String sql = "UPDATE " + tableName +
-        " SET " + setString.toString() +
-        " WHERE " + idColumn + " = ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    try {
-      int i = 1;
-      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-        Utils.setStatementParam(stmt, i, entry.getKey(), body);
-        i++;
-      }
-      Utils.setStatementParam(stmt, i, idColumn, body);
-      stmt.execute();
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
-    }
-  }
 }

@@ -1,8 +1,9 @@
-package io.elastic.jdbc.actions
+package io.elastic.jdbc.actions.delete
 
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
+import io.elastic.jdbc.actions.DeleteRowByPrimaryKey
 import spock.lang.Shared
 import spock.lang.Specification
 

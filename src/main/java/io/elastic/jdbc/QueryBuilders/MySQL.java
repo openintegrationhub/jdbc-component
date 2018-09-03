@@ -161,23 +161,15 @@ public class MySQL extends Query {
         " (" + keys.toString() + ")" +
         " VALUES (" + values.toString() + ")" +
         " ON DUPLICATE KEY UPDATE " + setString + ";";
-    PreparedStatement stmt = null;
-    try {
-      stmt = connection.prepareStatement(sql);
+    try (PreparedStatement stmt = connection.prepareStatement(sql)){
       int i = 1;
+      int countBodyEntry = body.size();
       for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
         Utils.setStatementParam(stmt, i, entry.getKey(), body);
-        i++;
-      }
-      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        Utils.setStatementParam(stmt, i + countBodyEntry, entry.getKey(), body);
         i++;
       }
       stmt.execute();
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
     }
   }
 

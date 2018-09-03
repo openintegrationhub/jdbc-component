@@ -1,8 +1,9 @@
-package io.elastic.jdbc.actions
+package io.elastic.jdbc.actions.upsert
 
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
+import io.elastic.jdbc.actions.UpsertRowByPrimaryKey
 import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
@@ -14,22 +15,22 @@ import java.sql.DriverManager
 import java.sql.ResultSet
 
 @Ignore
-class UpsertRowByPrimaryKeyOracleSpec extends Specification {
+class UpsertRowByPrimaryKeyMySQLSpec extends Specification {
 
   @Shared
-  def user = System.getenv("CONN_USER_ORACLE")
+  def user = System.getenv("CONN_USER_MYSQL")
   @Shared
-  def password = System.getenv("CONN_PASSWORD_ORACLE")
+  def password = System.getenv("CONN_PASSWORD_MYSQL")
   @Shared
-  def databaseName = System.getenv("CONN_DBNAME_ORACLE")
+  def databaseName = System.getenv("CONN_DBNAME_MYSQL")
   @Shared
-  def host = System.getenv("CONN_HOST_ORACLE")
+  def host = System.getenv("CONN_HOST_MYSQL")
   @Shared
-  def port = System.getenv("CONN_PORT_ORACLE")
+  def port = System.getenv("CONN_PORT_MYSQL")
   @Shared
-  def dbEngine = "oracle"
+  def dbEngine = "mysql"
   @Shared
-  def connectionString ="jdbc:oracle:thin:@//" + host + ":" + port + "/XE"
+  def connectionString ="jdbc:" + dbEngine + "://" + host + ":" + port + "/" + databaseName + "?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
   @Shared
   Connection connection
 
@@ -75,7 +76,7 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
 
   def getStarsConfig() {
     JsonObject config = Json.createObjectBuilder()
-    .add("tableName", "STARS")
+    .add("tableName", "stars")
     .add("user", user)
     .add("password", password)
     .add("dbEngine", dbEngine)
@@ -87,18 +88,11 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
   }
 
   def prepareStarsTable() {
-    String sql = "BEGIN" +
-            "   EXECUTE IMMEDIATE 'DROP TABLE stars';" +
-            "EXCEPTION" +
-            "   WHEN OTHERS THEN" +
-            "      IF SQLCODE != -942 THEN" +
-            "         RAISE;" +
-            "      END IF;" +
-            "END;"
+
+    String sql = "DROP TABLE IF EXISTS stars;"
     connection.createStatement().execute(sql);
-    connection.createStatement().execute("CREATE TABLE stars (id number, name varchar(255) NOT NULL, " +
-            "ndate timestamp, radius number, destination float,visible number(1), " +
-            "CONSTRAINT pk_stars PRIMARY KEY (id))");
+    connection.createStatement().execute("CREATE TABLE stars (id int PRIMARY KEY, name varchar(255) NOT NULL, " +
+            "date datetime, radius int, destination int, visible bit, visibledate date)");
   }
 
   def getRecords(tableName) {
@@ -113,24 +107,10 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
   }
 
   def cleanupSpec() {
-    String sql = "BEGIN" +
-            "   EXECUTE IMMEDIATE 'DROP TABLE persons';" +
-            "EXCEPTION" +
-            "   WHEN OTHERS THEN" +
-            "      IF SQLCODE != -942 THEN" +
-            "         RAISE;" +
-            "      END IF;" +
-            "END;"
+    String sql = "DROP TABLE IF EXISTS persons;"
 
     connection.createStatement().execute(sql)
-    sql = "BEGIN" +
-            "   EXECUTE IMMEDIATE 'DROP TABLE stars';" +
-            "EXCEPTION" +
-            "   WHEN OTHERS THEN" +
-            "      IF SQLCODE != -942 THEN" +
-            "         RAISE;" +
-            "      END IF;" +
-            "END;"
+    sql = "DROP TABLE IF EXISTS stars;"
     connection.createStatement().execute(sql)
     connection.close()
   }
@@ -142,11 +122,11 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
     JsonObject snapshot = Json.createObjectBuilder().build()
 
     JsonObject body = Json.createObjectBuilder()
-    .add("ID", 1)
+    .add("id", 1)
     .add("name", "Taurus")
-    .add("ndate", "2015-02-19 10:10:10")
+    .add("date", "2015-02-19 10:10:10.0")
     .add("radius", 123)
-    .add("visible", 1)
+    .add("visible", true)
     .build();
 
     runAction(getStarsConfig(), body, snapshot)
@@ -155,7 +135,8 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
 
     expect:
     records.size() == 1
-    records.get(0) == '{ID=1, NAME=Taurus, NDATE=2015-02-19 10:10:10.0, RADIUS=123, DESTINATION=null, VISIBLE=1}'
+    records.get(0) == '{id=1, name=Taurus, date=2015-02-19 10:10:10.0, radius=123, destination=null, visible=true, ' +
+            'visibledate=null}'
   }
 
   def "one insert, incorrect value: string in integer field"() {
@@ -165,7 +146,7 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
     JsonObject snapshot = Json.createObjectBuilder().build()
 
     JsonObject body = Json.createObjectBuilder()
-    .add("ID", 1)
+    .add("id", "1")
     .add("name", "Taurus")
     .add("radius", "test")
     .build()
@@ -188,14 +169,14 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
     JsonObject snapshot = Json.createObjectBuilder().build()
 
     JsonObject body1 = Json.createObjectBuilder()
-    .add("ID", 1)
+    .add("id", 1)
     .add("name", "Taurus")
     .add("radius", 123)
     .build()
     runAction(getStarsConfig(), body1, snapshot)
 
     JsonObject body2 = Json.createObjectBuilder()
-    .add("ID", 2)
+    .add("id", 2)
     .add("name", "Eridanus")
     .add("radius", 456)
     .build()
@@ -206,8 +187,8 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
 
     expect:
     records.size() == 2
-    records.get(0) == '{ID=1, NAME=Taurus, NDATE=null, RADIUS=123, DESTINATION=null, VISIBLE=null}'
-    records.get(1) == '{ID=2, NAME=Eridanus, NDATE=null, RADIUS=456, DESTINATION=null, VISIBLE=null}'
+    records.get(0) == '{id=1, name=Taurus, date=null, radius=123, destination=null, visible=null, visibledate=null}'
+    records.get(1) == '{id=2, name=Eridanus, date=null, radius=456, destination=null, visible=null, visibledate=null}'
   }
 
   def "one insert, one update by ID"() {
@@ -217,14 +198,14 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
     JsonObject snapshot = Json.createObjectBuilder().build()
 
     JsonObject body1 = Json.createObjectBuilder()
-    .add("ID", 1)
+    .add("id", 1)
     .add("name", "Taurus")
     .add("radius", 123)
     .build()
     runAction(getStarsConfig(), body1, snapshot)
 
     JsonObject body2 = Json.createObjectBuilder()
-    .add("ID", 1)
+    .add("id", 1)
     .add("name", "Eridanus")
     .build()
     runAction(getStarsConfig(), body2, snapshot)
@@ -233,13 +214,13 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
 
     expect:
     records.size() == 1
-    records.get(0) == '{ID=1, NAME=Eridanus, NDATE=null, RADIUS=123, DESTINATION=null, VISIBLE=null}'
+    records.get(0) == '{id=1, name=Eridanus, date=null, radius=123, destination=null, visible=null, visibledate=null}'
   }
 
 
   def getPersonsConfig() {
     JsonObject config = Json.createObjectBuilder()
-    .add("tableName", "PERSONS")
+    .add("tableName", "persons")
     .add("user", user)
     .add("password", password)
     .add("dbEngine", dbEngine)
@@ -251,17 +232,10 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
   }
 
   def preparePersonsTable() {
-    String sql = "BEGIN" +
-            "   EXECUTE IMMEDIATE 'DROP TABLE persons';" +
-            "EXCEPTION" +
-            "   WHEN OTHERS THEN" +
-            "      IF SQLCODE != -942 THEN" +
-            "         RAISE;" +
-            "      END IF;" +
-            "END;"
+    String sql = "DROP TABLE IF EXISTS persons;"
     connection.createStatement().execute(sql);
     connection.createStatement().execute("CREATE TABLE persons (id int, name varchar(255) NOT NULL, " +
-            "EMAIL varchar(255) NOT NULL, CONSTRAINT pk_persons PRIMARY KEY (EMAIL))");
+            "email varchar(255) NOT NULL PRIMARY KEY)");
   }
 
   def "one insert, name with quote"() {
@@ -273,7 +247,7 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
     JsonObject body1 = Json.createObjectBuilder()
     .add("id", 1)
     .add("name", "O'Henry")
-    .add("EMAIL", "ohenry@elastic.io")
+    .add("email", "ohenry@elastic.io")
     .build()
     runAction(getPersonsConfig(), body1, snapshot)
 
@@ -281,7 +255,7 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
 
     expect:
     records.size() == 1
-    records.get(0) == '{ID=1, NAME=O\'Henry, EMAIL=ohenry@elastic.io}'
+    records.get(0) == '{id=1, name=O\'Henry, email=ohenry@elastic.io}'
   }
 
   def "two inserts, one update by email"() {
@@ -293,21 +267,21 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
     JsonObject body1 = Json.createObjectBuilder()
     .add("id", 1)
     .add("name", "User1")
-    .add("EMAIL", "user1@elastic.io")
+    .add("email", "user1@elastic.io")
     .build()
     runAction(getPersonsConfig(), body1, snapshot)
 
     JsonObject body2 = Json.createObjectBuilder()
     .add("id", 2)
     .add("name", "User2")
-    .add("EMAIL", "user2@elastic.io")
+    .add("email", "user2@elastic.io")
     .build()
     runAction(getPersonsConfig(), body2, snapshot)
 
     JsonObject body3 = Json.createObjectBuilder()
     .add("id", 3)
     .add("name", "User3")
-    .add("EMAIL", "user2@elastic.io")
+    .add("email", "user2@elastic.io")
     .build()
     runAction(getPersonsConfig(), body3, snapshot)
 
@@ -315,7 +289,7 @@ class UpsertRowByPrimaryKeyOracleSpec extends Specification {
 
     expect:
     records.size() == 2
-    records.get(0) == '{ID=1, NAME=User1, EMAIL=user1@elastic.io}'
-    records.get(1) == '{ID=3, NAME=User3, EMAIL=user2@elastic.io}'
+    records.get(0) == '{id=1, name=User1, email=user1@elastic.io}'
+    records.get(1) == '{id=3, name=User3, email=user2@elastic.io}'
   }
 }
