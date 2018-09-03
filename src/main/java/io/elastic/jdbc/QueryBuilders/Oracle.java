@@ -142,10 +142,10 @@ public class Oracle extends Query {
     StringBuilder values = new StringBuilder();
     StringBuilder setString = new StringBuilder();
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-        if (setString.length() > 0) {
-          setString.append(",");
-        }
-        setString.append(entry.getKey()).append(" = ?");
+      if (setString.length() > 0) {
+        setString.append(",");
+      }
+      setString.append(entry.getKey()).append(" = ?");
       if (keys.length() > 0) {
         keys.append(",");
       }
@@ -165,24 +165,17 @@ public class Oracle extends Query {
         " SET " + setString.toString() +
         " WHERE " + idColumn + " = ?;" +
         " END;";
-    PreparedStatement stmt = null;
-    try {
-      stmt = connection.prepareStatement(sql);
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      //set Statement parameters for Insert (i) and Update operation (i + countBodyEntry)
       int i = 1;
+      int countBodyEntry = body.size();
       for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
         Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        Utils.setStatementParam(stmt, i + countBodyEntry, entry.getKey(), body);
         i++;
       }
-      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-          Utils.setStatementParam(stmt, i, entry.getKey(), body);
-          i++;
-      }
-      Utils.setStatementParam(stmt, i, idColumn, body);
+      Utils.setStatementParam(stmt, i + countBodyEntry, idColumn, body);
       stmt.execute();
-    } finally {
-      if (stmt != null) {
-        stmt.close();
-      }
     }
   }
 }
