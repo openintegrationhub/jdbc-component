@@ -14,7 +14,7 @@ Following actions are inside:
 
 ``LOOKUP BY PRIMARY KEY`` - this action will execute select query from specified table, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns only one result (a primary key is unique). 
 
-``UPSERT BY PRIMARY KEY`` - this action will execute select query from specified table, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"), if result is nullable, then action will execute insert query by [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"), else - action will execute update query by [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns only one result row (a primary key is unique).
+``UPSERT BY PRIMARY KEY`` - this action will execute select command from specified table, as search criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"), and execute insert command by PRIMARY KEY with specified field, if result does not found, else - action will execute update command by PRIMARY KEY with specified field. The action returns only one result row (a primary key is unique).
 
 ``DELETE BY PRIMARY KEY`` - this action will execute delete query from specified table, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns an integer value that indicates the number of rows affected, the returned value can be 0 or 1 (a primary key is unique).
 ### How works
@@ -22,15 +22,39 @@ Following actions are inside:
 ### Requirements
 Before you can deploy any code into elastic.io **you must be a registered elastic.io platform user**. Please see our home page at [http://www.elastic.io](http://www.elastic.io) to learn how. 
 #### Environment variables
-For unit-testing
+For unit-testing is needed specify following environment variables:
+1. Connection to MSSQL:
+ - ``CONN_USER_MSSQL`` - user login
+ - ``CONN_PASSWORD_MSSQL`` - user password
+ - ``CONN_DBNAME_MSSQL`` - DataBase name
+ - ``CONN_HOST_MSSQL`` - DataBase host
+ - ``CONN_PORT_MSSQL`` - DataBase port
+2. Connection to MySQL:
+ - ``CONN_USER_MYSQL`` - user login
+ - ``CONN_PASSWORD_MYSQL`` - user password
+ - ``CONN_DBNAME_MYSQL`` - DataBase name
+ - ``CONN_HOST_MYSQL`` - DataBase host
+ - ``CONN_PORT_MYSQL`` - DataBase port
+3. Connection to Oracle:
+ - ``CONN_USER_ORACLE`` - user login
+ - ``CONN_PASSWORD_ORACLE`` - user password
+ - ``CONN_DBNAME_ORACLE`` - DataBase name
+ - ``CONN_HOST_ORACLE`` - DataBase host
+ - ``CONN_PORT_ORACLE`` - DataBase port
+4. Connection to PostgreSQL:
+ - ``CONN_USER_POSTGRESQL`` - user login
+ - ``CONN_PASSWORD_POSTGRESQL`` - user password
+ - ``CONN_DBNAME_POSTGRESQL`` - DataBase name
+ - ``CONN_HOST_POSTGRESQL`` - DataBase host
+ - ``CONN_PORT_POSTGRESQL`` - DataBase port
 #### Others
 ## Credentials
 You may use following properties to configure a connection:
 ![image](https://user-images.githubusercontent.com/40201204/43577550-ce99efe6-9654-11e8-87ed-f3e0839d618a.png)
 You can add the authorisation methods during the integration flow design or by going to your Settings > Security credentials > REST client and adding there.
 ### DB Engine
+You are able to choose one of existing database types:
 ![image](https://user-images.githubusercontent.com/40201204/43577772-6f85bdea-9655-11e8-96e1-368493a36c9d.png)
-You are able to choose one of existing database types
 
 ### Connection URI
 In the Connection URI field please provide hostname of the server, e.g. ``acme.com``
@@ -127,8 +151,34 @@ Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty respon
 As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
 
 ### UPSERT BY PRIMARY KEY
-![image](https://user-images.githubusercontent.com/16806832/44396836-d3880280-a546-11e8-8fbd-efc1fd089d93.png)
-The action will execute select query from a ``Tables`` dropdown field, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"), if result is nullable, then action will execute insert query by PRIMARY KEY with specified field, else - action will execute update query by PRIMARY KEY with specified field. The action returns only one result row (a primary key is unique).
+The action will execute ``SELECT`` command from a ``Tables`` dropdown field, as search criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"), and execute ``INSERT`` command by PRIMARY KEY with specified field, if result does not found, else - action will execute ``UPDATE`` command by PRIMARY KEY with specified field. The action returns only one result row (a primary key is unique).
+1. Find and select jdbc-component in the component repository
+![image](https://user-images.githubusercontent.com/16806832/44981615-c70a9d80-af7b-11e8-8055-3b553abe8212.png)
+
+2. Create new or select existing credentials
+![image](https://user-images.githubusercontent.com/16806832/44981652-e86b8980-af7b-11e8-897e-04d1fc9a93cf.png)
+
+3. Select action "Upsert Row By Primary Key" from list
+![image](https://user-images.githubusercontent.com/16806832/44981700-0d5ffc80-af7c-11e8-9ac3-aedb16e1d788.png)
+
+4. Select table from ``Table`` dropdown list
+![image](https://user-images.githubusercontent.com/16806832/44981754-38e2e700-af7c-11e8-87d3-f029a7fec8fa.png)
+
+5. Specify input data (field with red asterisk is Primary key), and click "Continue"
+![image](https://user-images.githubusercontent.com/16806832/44981854-83fcfa00-af7c-11e8-9ef2-8c06e77fed1e.png)
+
+6. Retrieving sample
+![image](https://user-images.githubusercontent.com/16806832/44983059-86f9e980-af80-11e8-8178-77e463488c7a.png)
+
+7. Retrieve sample result
+![image](https://user-images.githubusercontent.com/16806832/44982952-2ec2e780-af80-11e8-98b1-58c3adbc15b9.png)
+
+8. Click "Continue"
+![image](https://user-images.githubusercontent.com/16806832/44983101-b0b31080-af80-11e8-82d8-0e70e4b4ff97.png)
+
+9. Finish component configuration
+![image](https://user-images.githubusercontent.com/16806832/44983365-90378600-af81-11e8-9be4-4dbb39af0fdc.png)
+
 #### Input fields description
 As an input metadata you will get all fields of selected table. [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY") is required field (will mark as asterisk) and other input fields are optional.
 ![image](https://user-images.githubusercontent.com/16806832/44397461-1a76f780-a549-11e8-8247-9a6f9aa3f3b4.png)
