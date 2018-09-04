@@ -22,6 +22,7 @@ public abstract class Query {
   protected String orderField = null;
   protected String pollingField = null;
   protected Timestamp pollingValue = null;
+  protected Timestamp maxPollingValue = null;
   protected String lookupField = null;
   protected String lookupValue = null;
 
@@ -70,7 +71,15 @@ public abstract class Query {
     return this;
   }
 
-  abstract public ResultSet executePolling(Connection connection) throws SQLException;
+  public Timestamp getMaxPollingValue() {
+    return maxPollingValue;
+  }
+
+  public void setMaxPollingValue(Timestamp maxPollingValue) {
+    this.maxPollingValue = maxPollingValue;
+  }
+
+  abstract public ArrayList executePolling(Connection connection) throws SQLException;
 
   abstract public JsonObject executeLookup(Connection connection, JsonObject body)
       throws SQLException;
