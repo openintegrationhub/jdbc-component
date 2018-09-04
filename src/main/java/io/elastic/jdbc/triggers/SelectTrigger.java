@@ -8,14 +8,13 @@ import io.elastic.jdbc.QueryFactory;
 import io.elastic.jdbc.Utils;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,11 +35,9 @@ public class SelectTrigger implements Module {
     LOGGER.info("About to execute select trigger");
     final JsonObject configuration = parameters.getConfiguration();
     JsonObject snapshot = parameters.getSnapshot();
-    JsonObjectBuilder row = Json.createObjectBuilder();
     checkConfig(configuration);
     Connection connection = Utils.getConnection(configuration);
     Integer skipNumber = 0;
-    Integer rowsCount = 0;
 
     Calendar cDate = Calendar.getInstance();
     cDate.set(cDate.get(Calendar.YEAR), cDate.get(Calendar.MONTH), cDate.get(Calendar.DATE), 0, 0,
@@ -79,26 +76,25 @@ public class SelectTrigger implements Module {
         query.selectPolling(sqlQuery, pollingValue);
       }
       LOGGER.info("SQL Query: {}", sqlQuery);
-      rs = query.executeSelectTrigger(connection, sqlQuery);
-      ResultSetMetaData metaData = rs.getMetaData();
-      while (rs.next()) {
-        for (int i = 1; i <= metaData.getColumnCount(); i++) {
-          row = Utils.getColumnDataByType(rs, metaData, i, row);
-        }
-        rowsCount++;
-        LOGGER.info("Emitting data");
-        LOGGER.info(row.toString());
-        parameters.getEventEmitter().emitData(new Message.Builder().body(row.build()).build());
+      ArrayList<JsonObject> resultList = query.executeSelectTrigger(connection, sqlQuery);
+      for (int i = 0; i < resultList.size(); i++) {
+        LOGGER.info("Columns count: {} from {}", i + 1, resultList.size());
+        LOGGER.info("Emitting data {}", resultList.get(i).toString());
+        parameters.getEventEmitter()
+            .emitData(new Message.Builder().body(resultList.get(i)).build());
       }
 
-      if (rowsCount == 0) {
-        row.add("empty dataset", "no data");
-        LOGGER.info("Emitting data");
-        LOGGER.info(row.toString());
-        parameters.getEventEmitter().emitData(new Message.Builder().body(row.build()).build());
+      if (resultList.size() == 0) {
+        resultList.add(Json.createObjectBuilder()
+            .add("empty dataset", "no data")
+            .build());
+        LOGGER.info("Emitting data {}", resultList.get(0).toString());
+        parameters.getEventEmitter()
+            .emitData(new Message.Builder().body(resultList.get(0)).build());
       }
 
-      snapshot = Json.createObjectBuilder().add(PROPERTY_SKIP_NUMBER, skipNumber + rowsCount)
+      snapshot = Json.createObjectBuilder()
+          .add(PROPERTY_SKIP_NUMBER, skipNumber + resultList.size())
           .add(LAST_POLL_PLACEHOLDER, pollingValue.toString())
           .add(SQL_QUERY_VALUE, sqlQuery).build();
       LOGGER.info("Emitting new snapshot {}", snapshot.toString());
@@ -106,21 +102,6 @@ public class SelectTrigger implements Module {
     } catch (SQLException e) {
       LOGGER.error("Failed to make request", e.toString());
       throw new RuntimeException(e);
-    } finally {
-      if (rs != null) {
-        try {
-          rs.close();
-        } catch (SQLException e) {
-          LOGGER.error("Failed to close result set", e.toString());
-        }
-      }
-      if (connection != null) {
-        try {
-          connection.close();
-        } catch (SQLException e) {
-          LOGGER.error("Failed to close connection", e.toString());
-        }
-      }
     }
   }
 
