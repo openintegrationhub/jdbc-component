@@ -16,18 +16,7 @@ import javax.json.JsonValue;
 
 public class Oracle extends Query {
 
-  public ResultSet executeSelectQuery(Connection connection, String sqlQuery, JsonObject body)
-      throws SQLException {
-    PreparedStatement stmt = connection.prepareStatement(sqlQuery);
-    int i = 1;
-    for (Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), body);
-      i++;
-    }
-    return stmt.executeQuery();
-  }
-
-  public ArrayList executeSelectQueryNew(Connection connection, String sqlQuery, JsonObject body)
+  public ArrayList executeSelectQuery(Connection connection, String sqlQuery, JsonObject body)
       throws SQLException {
     try (PreparedStatement stmt = connection.prepareStatement(sqlQuery)) {
       int i = 1;

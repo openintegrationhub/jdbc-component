@@ -83,10 +83,7 @@ public abstract class Query {
   abstract public void executeUpsert(Connection connection, String idColumn,
       JsonObject body) throws SQLException;
 
-  abstract public ResultSet executeSelectQuery(Connection connection, String sqlQuery,
-      JsonObject body) throws SQLException;
-
-  abstract public ArrayList executeSelectQueryNew(Connection connection, String sqlQuery,
+  abstract public ArrayList executeSelectQuery(Connection connection, String sqlQuery,
       JsonObject body) throws SQLException;
 
   abstract public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)

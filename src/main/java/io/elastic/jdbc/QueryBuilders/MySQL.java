@@ -16,19 +16,7 @@ import javax.json.JsonValue;
 
 public class MySQL extends Query {
 
-  public ResultSet executeSelectQuery(Connection connection, String sqlQuery, JsonObject body)
-      throws SQLException {
-    StringBuilder sql = new StringBuilder(sqlQuery);
-    PreparedStatement stmt = connection.prepareStatement(sql.toString());
-    int i = 1;
-    for (Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), (entry.getValue() != null) ? body : null);
-      i++;
-    }
-    return stmt.executeQuery();
-  }
-
-  public ArrayList executeSelectQueryNew(Connection connection, String sqlQuery, JsonObject body)
+  public ArrayList executeSelectQuery(Connection connection, String sqlQuery, JsonObject body)
       throws SQLException {
     StringBuilder sql = new StringBuilder(sqlQuery);
     try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
