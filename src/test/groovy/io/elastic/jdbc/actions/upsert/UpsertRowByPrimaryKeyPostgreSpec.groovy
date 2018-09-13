@@ -1,9 +1,12 @@
-package io.elastic.jdbc.actions
+package io.elastic.jdbc.actions.upsert
 
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import spock.lang.*
+import io.elastic.jdbc.actions.UpsertRowByPrimaryKey
+import spock.lang.Ignore
+import spock.lang.Shared
+import spock.lang.Specification
 
 import javax.json.Json
 import javax.json.JsonObject
@@ -12,20 +15,22 @@ import java.sql.DriverManager
 import java.sql.ResultSet
 
 @Ignore
-class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
+class UpsertRowByPrimaryKeyPostgreSpec extends Specification {
 
   @Shared
-  def user = System.getenv("CONN_USER_MSSQL")
+  def user = System.getenv("CONN_USER_POSTGRESQL")
   @Shared
-  def password = System.getenv("CONN_PASSWORD_MSSQL")
+  def password = System.getenv("CONN_PASSWORD_POSTGRESQL")
   @Shared
-  def databaseName = System.getenv("CONN_DBNAME_MSSQL")
+  def databaseName = System.getenv("CONN_DBNAME_POSTGRESQL")
   @Shared
-  def host = System.getenv("CONN_HOST_MSSQL")
+  def host = System.getenv("CONN_HOST_POSTGRESQL")
   @Shared
-  def port = System.getenv("CONN_PORT_MSSQL")
+  def port = System.getenv("CONN_PORT_POSTGRESQL")
   @Shared
-  def connectionString ="jdbc:sqlserver://" + host + ":" + port + ";database=" + databaseName
+  def dbEngine = "postgresql"
+  @Shared
+  def connectionString ="jdbc:postgresql://"+ host + ":" + port + "/" + databaseName
   @Shared
   Connection connection
 
@@ -74,7 +79,7 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
     .add("tableName", "stars")
     .add("user", user)
     .add("password", password)
-    .add("dbEngine", "mssql")
+    .add("dbEngine", dbEngine)
     .add("host", host)
     .add("port", port)
     .add("databaseName", databaseName)
@@ -83,11 +88,10 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
   }
 
   def prepareStarsTable() {
-    String sql = "IF OBJECT_ID('stars', 'U') IS NOT NULL\n" +
-        "  DROP TABLE stars;"
+    String sql = "DROP TABLE IF EXISTS stars;"
     connection.createStatement().execute(sql);
-    connection.createStatement().execute("CREATE TABLE stars (id int PRIMARY KEY, name varchar(255) NOT NULL, " +
-            "date datetime, radius int, destination int, visible bit, visibledate date)");
+    connection.createStatement().execute("CREATE TABLE stars (id int, name varchar(255) NOT NULL, " +
+            "date timestamp, radius int, destination int, visible boolean, visibledate date, PRIMARY KEY(id))");
   }
 
   def getRecords(tableName) {
@@ -102,12 +106,10 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
   }
 
   def cleanupSpec() {
-    String sql = "IF OBJECT_ID('persons', 'U') IS NOT NULL\n" +
-        "  DROP TABLE persons;"
+    String sql = "DROP TABLE IF EXISTS persons;"
 
     connection.createStatement().execute(sql)
-    sql = "IF OBJECT_ID('stars', 'U') IS NOT NULL\n" +
-        "  DROP TABLE stars;"
+    sql = "DROP TABLE IF EXISTS stars;"
     connection.createStatement().execute(sql)
     connection.close()
   }
@@ -121,7 +123,7 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
     JsonObject body = Json.createObjectBuilder()
     .add("id", 1)
     .add("name", "Taurus")
-    .add("date", "2015-02-19 10:10:10.0")
+    .add("date", "2015-02-19 10:10:10")
     .add("radius", 123)
     .add("visible", true)
     .add("visibledate", "2015-02-19")
@@ -144,7 +146,7 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
     JsonObject snapshot = Json.createObjectBuilder().build()
 
     JsonObject body = Json.createObjectBuilder()
-    .add("id", "1")
+    .add("id", 1)
     .add("name", "Taurus")
     .add("radius", "test")
     .build()
@@ -221,7 +223,7 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
     .add("tableName", "persons")
     .add("user", user)
     .add("password", password)
-    .add("dbEngine", "mssql")
+    .add("dbEngine", dbEngine)
     .add("host", host)
     .add("port", port)
     .add("databaseName", databaseName)
@@ -230,11 +232,10 @@ class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
   }
 
   def preparePersonsTable() {
-    String sql = "IF OBJECT_ID('persons', 'U') IS NOT NULL\n" +
-        "  DROP TABLE persons;"
+    String sql = "DROP TABLE IF EXISTS persons;"
     connection.createStatement().execute(sql);
     connection.createStatement().execute("CREATE TABLE persons (id int, name varchar(255) NOT NULL, " +
-            "email varchar(255) NOT NULL PRIMARY KEY)");
+            "email varchar(255) NOT NULL, PRIMARY KEY(email))");
   }
 
   def "one insert, name with quote"() {

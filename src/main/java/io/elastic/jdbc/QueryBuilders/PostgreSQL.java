@@ -4,35 +4,18 @@ import io.elastic.jdbc.Utils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Map;
-import java.util.Map.Entry;
+import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 
 public class PostgreSQL extends Query {
 
-  public ResultSet executeSelectQuery(Connection connection, String sqlQuery, JsonObject body)
-      throws SQLException {
-    PreparedStatement stmt = connection.prepareStatement(sqlQuery);
-    int i = 1;
-    for (Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), body);
-      i++;
-    }
-    return stmt.executeQuery();
-  }
-
-  public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)
-      throws SQLException {
-    PreparedStatement stmt = connection.prepareStatement(sqlQuery);
-    if (pollingValue != null) {
-      stmt.setTimestamp(1, pollingValue);
-    }
-    return stmt.executeQuery();
-  }
-
-  public ResultSet executePolling(Connection connection) throws SQLException {
+  public ArrayList executePolling(Connection connection) throws SQLException {
     validateQuery();
     String sql = "WITH results_cte AS" +
         "(" +
@@ -46,14 +29,37 @@ public class PostgreSQL extends Query {
         " FROM results_cte" +
         " WHERE rownum > ?" +
         " AND rownum < ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    stmt.setTimestamp(1, pollingValue);
-    stmt.setInt(2, skipNumber);
-    stmt.setInt(3, countNumber + skipNumber);
-    return stmt.executeQuery();
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      stmt.setTimestamp(1, pollingValue);
+      stmt.setInt(2, skipNumber);
+      stmt.setInt(3, countNumber + skipNumber);
+      try (ResultSet rs = stmt.executeQuery()) {
+        ArrayList listResult = new ArrayList();
+        JsonObjectBuilder row = Json.createObjectBuilder();
+        ResultSetMetaData metaData = rs.getMetaData();
+        while (rs.next()) {
+          for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            row = Utils.getColumnDataByType(rs, metaData, i, row);
+            if (metaData.getColumnName(i).toUpperCase().equals(pollingField.toUpperCase())) {
+              if (maxPollingValue.before(rs.getTimestamp(i))) {
+                if (rs.getString(metaData.getColumnName(i)).length() > 10) {
+                  maxPollingValue = java.sql.Timestamp
+                      .valueOf(rs.getString(metaData.getColumnName(i)));
+                } else {
+                  maxPollingValue = java.sql.Timestamp
+                      .valueOf(rs.getString(metaData.getColumnName(i)) + " 00:00:00");
+                }
+              }
+            }
+          }
+          listResult.add(row.build());
+        }
+        return listResult;
+      }
+    }
   }
 
-  public ResultSet executeLookup(Connection connection, JsonObject body) throws SQLException {
+  public JsonObject executeLookup(Connection connection, JsonObject body) throws SQLException {
     validateQuery();
     String sql = "WITH results_cte AS" +
         "(" +
@@ -67,14 +73,7 @@ public class PostgreSQL extends Query {
         " FROM results_cte" +
         " WHERE rownum > ?" +
         " AND rownum < ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    //stmt.setString(1, lookupValue);
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, 1, entry.getKey(), body);
-    }
-    stmt.setInt(2, skipNumber);
-    stmt.setInt(3, countNumber + skipNumber);
-    return stmt.executeQuery();
+    return Utils.getLookupRow(connection, body, sql, skipNumber, countNumber + skipNumber);
   }
 
   public int executeDelete(Connection connection, JsonObject body) throws SQLException {
@@ -82,11 +81,12 @@ public class PostgreSQL extends Query {
     String sql = "DELETE" +
         " FROM " + tableName +
         " WHERE " + lookupField + " = ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, 1, entry.getKey(), body);
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, 1, entry.getKey(), body);
+      }
+      return stmt.executeUpdate();
     }
-    return stmt.executeUpdate();
   }
 
   public boolean executeRecordExists(Connection connection, JsonObject body) throws SQLException {
@@ -94,11 +94,7 @@ public class PostgreSQL extends Query {
     String sql = "SELECT COUNT(*)" +
         " FROM " + tableName +
         " WHERE " + lookupField + " = ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    Utils.setStatementParam(stmt, 1, lookupField, body);
-    ResultSet rs = stmt.executeQuery();
-    rs.next();
-    return rs.getInt(1) > 0;
+    return Utils.isRecordExists(connection, body, sql, lookupField);
   }
 
   public void executeInsert(Connection connection, String tableName, JsonObject body)
@@ -119,13 +115,14 @@ public class PostgreSQL extends Query {
     String sql = "INSERT INTO " + tableName +
         " (" + keys.toString() + ")" +
         " VALUES (" + values.toString() + ")";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    int i = 1;
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), body);
-      i++;
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      int i = 1;
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
+      }
+      stmt.execute();
     }
-    stmt.execute();
   }
 
   public void executeUpdate(Connection connection, String tableName, String idColumn,
@@ -141,14 +138,15 @@ public class PostgreSQL extends Query {
     String sql = "UPDATE " + tableName +
         " SET " + setString.toString() +
         " WHERE " + idColumn + " = ?";
-    PreparedStatement stmt = connection.prepareStatement(sql);
-    int i = 1;
-    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      Utils.setStatementParam(stmt, i, entry.getKey(), body);
-      i++;
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      int i = 1;
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
+      }
+      Utils.setStatementParam(stmt, i, idColumn, body);
+      stmt.execute();
     }
-    Utils.setStatementParam(stmt, i, idColumn, body);
-    stmt.execute();
   }
 
   public void executeUpsert(Connection connection, String idColumn, JsonObject body)

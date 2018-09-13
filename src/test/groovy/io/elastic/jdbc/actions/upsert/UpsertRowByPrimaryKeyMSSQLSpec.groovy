@@ -1,11 +1,10 @@
-package io.elastic.jdbc.actions
+package io.elastic.jdbc.actions.upsert
 
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import spock.lang.Ignore
-import spock.lang.Shared
-import spock.lang.Specification
+import io.elastic.jdbc.actions.UpsertRowByPrimaryKey
+import spock.lang.*
 
 import javax.json.Json
 import javax.json.JsonObject
@@ -13,23 +12,21 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 
-@Ignore
-class UpsertRowByPrimaryKeyMySQLSpec extends Specification {
+//@Ignore
+class UpsertRowByPrimaryKeyMSSQLSpec extends Specification {
 
   @Shared
-  def user = System.getenv("CONN_USER_MYSQL")
+  def user = "john"//System.getenv("CONN_USER_MSSQL")
   @Shared
-  def password = System.getenv("CONN_PASSWORD_MYSQL")
+  def password = "elastic123"//System.getenv("CONN_PASSWORD_MSSQL")
   @Shared
-  def databaseName = System.getenv("CONN_DBNAME_MYSQL")
+  def databaseName = "Test2"//System.getenv("CONN_DBNAME_MSSQL")
   @Shared
-  def host = System.getenv("CONN_HOST_MYSQL")
+  def host = "eio-mssql-fra.c79g081qpeyv.eu-central-1.rds.amazonaws.com"//System.getenv("CONN_HOST_MSSQL")
   @Shared
-  def port = System.getenv("CONN_PORT_MYSQL")
+  def port = "1433"//System.getenv("CONN_PORT_MSSQL")
   @Shared
-  def dbEngine = "mysql"
-  @Shared
-  def connectionString ="jdbc:" + dbEngine + "://" + host + ":" + port + "/" + databaseName + "?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+  def connectionString ="jdbc:sqlserver://" + host + ":" + port + ";database=" + databaseName
   @Shared
   Connection connection
 
@@ -78,7 +75,7 @@ class UpsertRowByPrimaryKeyMySQLSpec extends Specification {
     .add("tableName", "stars")
     .add("user", user)
     .add("password", password)
-    .add("dbEngine", dbEngine)
+    .add("dbEngine", "mssql")
     .add("host", host)
     .add("port", port)
     .add("databaseName", databaseName)
@@ -87,8 +84,8 @@ class UpsertRowByPrimaryKeyMySQLSpec extends Specification {
   }
 
   def prepareStarsTable() {
-
-    String sql = "DROP TABLE IF EXISTS stars;"
+    String sql = "IF OBJECT_ID('stars', 'U') IS NOT NULL\n" +
+        "  DROP TABLE stars;"
     connection.createStatement().execute(sql);
     connection.createStatement().execute("CREATE TABLE stars (id int PRIMARY KEY, name varchar(255) NOT NULL, " +
             "date datetime, radius int, destination int, visible bit, visibledate date)");
@@ -106,10 +103,12 @@ class UpsertRowByPrimaryKeyMySQLSpec extends Specification {
   }
 
   def cleanupSpec() {
-    String sql = "DROP TABLE IF EXISTS persons;"
+    String sql = "IF OBJECT_ID('persons', 'U') IS NOT NULL\n" +
+        "  DROP TABLE persons;"
 
     connection.createStatement().execute(sql)
-    sql = "DROP TABLE IF EXISTS stars;"
+    sql = "IF OBJECT_ID('stars', 'U') IS NOT NULL\n" +
+        "  DROP TABLE stars;"
     connection.createStatement().execute(sql)
     connection.close()
   }
@@ -126,6 +125,7 @@ class UpsertRowByPrimaryKeyMySQLSpec extends Specification {
     .add("date", "2015-02-19 10:10:10.0")
     .add("radius", 123)
     .add("visible", true)
+    .add("visibledate", "2015-02-19")
     .build();
 
     runAction(getStarsConfig(), body, snapshot)
@@ -135,7 +135,7 @@ class UpsertRowByPrimaryKeyMySQLSpec extends Specification {
     expect:
     records.size() == 1
     records.get(0) == '{id=1, name=Taurus, date=2015-02-19 10:10:10.0, radius=123, destination=null, visible=true, ' +
-            'visibledate=null}'
+            'visibledate=2015-02-19}'
   }
 
   def "one insert, incorrect value: string in integer field"() {
@@ -222,7 +222,7 @@ class UpsertRowByPrimaryKeyMySQLSpec extends Specification {
     .add("tableName", "persons")
     .add("user", user)
     .add("password", password)
-    .add("dbEngine", dbEngine)
+    .add("dbEngine", "mssql")
     .add("host", host)
     .add("port", port)
     .add("databaseName", databaseName)
@@ -231,7 +231,8 @@ class UpsertRowByPrimaryKeyMySQLSpec extends Specification {
   }
 
   def preparePersonsTable() {
-    String sql = "DROP TABLE IF EXISTS persons;"
+    String sql = "IF OBJECT_ID('persons', 'U') IS NOT NULL\n" +
+        "  DROP TABLE persons;"
     connection.createStatement().execute(sql);
     connection.createStatement().execute("CREATE TABLE persons (id int, name varchar(255) NOT NULL, " +
             "email varchar(255) NOT NULL PRIMARY KEY)");

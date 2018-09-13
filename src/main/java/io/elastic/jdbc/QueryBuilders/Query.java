@@ -2,10 +2,17 @@ package io.elastic.jdbc.QueryBuilders;
 
 import io.elastic.jdbc.Utils;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Map.Entry;
+import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
 
 public abstract class Query {
 
@@ -15,6 +22,7 @@ public abstract class Query {
   protected String orderField = null;
   protected String pollingField = null;
   protected Timestamp pollingValue = null;
+  protected Timestamp maxPollingValue = null;
   protected String lookupField = null;
   protected String lookupValue = null;
 
@@ -63,9 +71,17 @@ public abstract class Query {
     return this;
   }
 
-  abstract public ResultSet executePolling(Connection connection) throws SQLException;
+  public Timestamp getMaxPollingValue() {
+    return maxPollingValue;
+  }
 
-  abstract public ResultSet executeLookup(Connection connection, JsonObject body)
+  public void setMaxPollingValue(Timestamp maxPollingValue) {
+    this.maxPollingValue = maxPollingValue;
+  }
+
+  abstract public ArrayList executePolling(Connection connection) throws SQLException;
+
+  abstract public JsonObject executeLookup(Connection connection, JsonObject body)
       throws SQLException;
 
   abstract public boolean executeRecordExists(Connection connection, JsonObject body)
@@ -82,11 +98,49 @@ public abstract class Query {
   abstract public void executeUpsert(Connection connection, String idColumn,
       JsonObject body) throws SQLException;
 
-  abstract public ResultSet executeSelectQuery(Connection connection, String sqlQuery,
-      JsonObject body) throws SQLException;
+  public ArrayList executeSelectTrigger(Connection connection, String sqlQuery)
+      throws SQLException {
+    try (PreparedStatement stmt = connection.prepareStatement(sqlQuery)) {
+      if (pollingValue != null) {
+        stmt.setTimestamp(1, pollingValue);
+      }
+      try (ResultSet rs = stmt.executeQuery()) {
+        ArrayList listResult = new ArrayList();
+        JsonObjectBuilder row = Json.createObjectBuilder();
+        ResultSetMetaData metaData = rs.getMetaData();
+        while (rs.next()) {
+          for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            row = Utils.getColumnDataByType(rs, metaData, i, row);
+          }
+          listResult.add(row.build());
+        }
+        return listResult;
+      }
+    }
+  }
 
-  abstract public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)
-      throws SQLException;
+  public ArrayList executeSelectQuery(Connection connection, String sqlQuery, JsonObject body)
+      throws SQLException {
+    try (PreparedStatement stmt = connection.prepareStatement(sqlQuery)) {
+      int i = 1;
+      for (Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
+      }
+      try (ResultSet rs = stmt.executeQuery()) {
+        JsonObjectBuilder row = Json.createObjectBuilder();
+        ArrayList listResult = new ArrayList();
+        ResultSetMetaData metaData = rs.getMetaData();
+        while (rs.next()) {
+          for (i = 1; i <= metaData.getColumnCount(); i++) {
+            row = Utils.getColumnDataByType(rs, metaData, i, row);
+          }
+          listResult.add(row.build());
+        }
+        return listResult;
+      }
+    }
+  }
 
   public void validateQuery() {
     if (tableName == null) {
