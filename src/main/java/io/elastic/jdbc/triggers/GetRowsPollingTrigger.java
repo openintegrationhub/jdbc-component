@@ -83,21 +83,12 @@ public class GetRowsPollingTrigger implements Module {
           .rowsPolling(pollingField, pollingValue);
       query.setMaxPollingValue(cts);
       ArrayList<JsonObject> resultList = query.executePolling(connection);
+
       for (int i = 0; i < resultList.size(); i++) {
         LOGGER.info("Columns count: {} from {}", i + 1, resultList.size());
         LOGGER.info("Emitting data {}", resultList.get(i).toString());
         parameters.getEventEmitter()
             .emitData(new Message.Builder().body(resultList.get(i)).build());
-      }
-
-      if (resultList.size() == 0) {
-        resultList.add(Json.createObjectBuilder()
-            .add("empty dataset", "no data")
-            .build());
-        LOGGER.info("Emitting empty data");
-        query.setMaxPollingValue(new java.sql.Timestamp(System.currentTimeMillis()));
-        parameters.getEventEmitter()
-            .emitData(new Message.Builder().body(resultList.get(0)).build());
       }
 
       formattedDate = new SimpleDateFormat(PROPERTY_DATETIME_FORMAT)

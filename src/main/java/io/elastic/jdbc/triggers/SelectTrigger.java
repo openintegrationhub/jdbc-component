@@ -84,15 +84,6 @@ public class SelectTrigger implements Module {
             .emitData(new Message.Builder().body(resultList.get(i)).build());
       }
 
-      if (resultList.size() == 0) {
-        resultList.add(Json.createObjectBuilder()
-            .add("empty dataset", "no data")
-            .build());
-        LOGGER.info("Emitting data {}", resultList.get(0).toString());
-        parameters.getEventEmitter()
-            .emitData(new Message.Builder().body(resultList.get(0)).build());
-      }
-
       snapshot = Json.createObjectBuilder()
           .add(PROPERTY_SKIP_NUMBER, skipNumber + resultList.size())
           .add(LAST_POLL_PLACEHOLDER, pollingValue.toString())
