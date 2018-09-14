@@ -241,8 +241,8 @@ public class Utils {
   public static JsonObjectBuilder getColumnDataByType(ResultSet rs, ResultSetMetaData metaData,
       int i, JsonObjectBuilder row) {
     try {
-      final String columnName  = metaData.getColumnName(i);
-      if(null==rs.getObject(columnName)){
+      final String columnName = metaData.getColumnName(i);
+      if (null == rs.getObject(columnName)) {
         row.add(columnName, JsonValue.NULL);
         return row;
       }
@@ -262,7 +262,7 @@ public class Utils {
           break;
         case Types.NUMERIC:
         case Types.DECIMAL:
-          row.add(columnName, (rs.getBigDecimal(columnName)!=null));
+          row.add(columnName, (rs.getBigDecimal(columnName) != null));
           break;
         case Types.DOUBLE:
           row.add(columnName, rs.getDouble(columnName));
@@ -328,8 +328,9 @@ public class Utils {
     }
   }
 
-  public static boolean isRecordExists (Connection connection, JsonObject body, String sql, String lookupField) throws SQLException{
-    try (PreparedStatement stmt = connection.prepareStatement(sql)){
+  public static boolean isRecordExists(Connection connection, JsonObject body, String sql,
+      String lookupField) throws SQLException {
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       Utils.setStatementParam(stmt, 1, lookupField, body);
       try (ResultSet rs = stmt.executeQuery()) {
         rs.next();
