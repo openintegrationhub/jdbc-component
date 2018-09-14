@@ -2,10 +2,18 @@ package io.elastic.jdbc.QueryBuilders;
 
 import io.elastic.jdbc.Utils;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
+import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonValue;
 
 public abstract class Query {
 
@@ -15,8 +23,22 @@ public abstract class Query {
   protected String orderField = null;
   protected String pollingField = null;
   protected Timestamp pollingValue = null;
+  protected Timestamp maxPollingValue = null;
   protected String lookupField = null;
   protected String lookupValue = null;
+
+  public static String preProcessSelect(String sqlQuery) {
+    sqlQuery = sqlQuery.trim();
+    if (!isSelect(sqlQuery)) {
+      throw new RuntimeException("Unresolvable SELECT query");
+    }
+    return sqlQuery.replaceAll(Utils.VARS_REGEXP, "?");
+  }
+
+  public static boolean isSelect(String sqlQuery) {
+    String pattern = "select";
+    return sqlQuery.toLowerCase().startsWith(pattern);
+  }
 
   public Query skip(Integer skip) {
     this.skipNumber = skip;
@@ -50,12 +72,21 @@ public abstract class Query {
     return this;
   }
 
-  abstract public ResultSet executePolling(Connection connection) throws SQLException;
+  public Timestamp getMaxPollingValue() {
+    return maxPollingValue;
+  }
 
-  abstract public ResultSet executeLookup(Connection connection, JsonObject body)
+  public void setMaxPollingValue(Timestamp maxPollingValue) {
+    this.maxPollingValue = maxPollingValue;
+  }
+
+  abstract public ArrayList executePolling(Connection connection) throws SQLException;
+
+  abstract public JsonObject executeLookup(Connection connection, JsonObject body)
       throws SQLException;
 
-  abstract public boolean executeRecordExists(Connection connection) throws SQLException;
+  abstract public boolean executeRecordExists(Connection connection, JsonObject body)
+      throws SQLException;
 
   abstract public int executeDelete(Connection connection, JsonObject body) throws SQLException;
 
@@ -65,29 +96,167 @@ public abstract class Query {
   abstract public void executeUpdate(Connection connection, String tableName, String idColumn,
       String idValue, JsonObject body) throws SQLException;
 
-  abstract public ResultSet executeSelectQuery(Connection connection, String sqlQuery,
-      JsonObject body) throws SQLException;
+  public ArrayList executeSelectTrigger(Connection connection, String sqlQuery)
+      throws SQLException {
+    try (PreparedStatement stmt = connection.prepareStatement(sqlQuery)) {
+      if (pollingValue != null) {
+        stmt.setTimestamp(1, pollingValue);
+      }
+      try (ResultSet rs = stmt.executeQuery()) {
+        ArrayList listResult = new ArrayList();
+        JsonObjectBuilder row = Json.createObjectBuilder();
+        ResultSetMetaData metaData = rs.getMetaData();
+        while (rs.next()) {
+          for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            row = Utils.getColumnDataByType(rs, metaData, i, row);
+          }
+          listResult.add(row.build());
+        }
+        return listResult;
+      }
+    }
+  }
 
-  abstract public ResultSet executeSelectTrigger(Connection connection, String sqlQuery)
-      throws SQLException;
+  public ArrayList executeSelectQuery(Connection connection, String sqlQuery, JsonObject body)
+      throws SQLException {
+    try (PreparedStatement stmt = connection.prepareStatement(sqlQuery)) {
+      int i = 1;
+      for (Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, i, entry.getKey(), body);
+        i++;
+      }
+      try (ResultSet rs = stmt.executeQuery()) {
+        JsonObjectBuilder row = Json.createObjectBuilder();
+        ArrayList listResult = new ArrayList();
+        ResultSetMetaData metaData = rs.getMetaData();
+        while (rs.next()) {
+          for (i = 1; i <= metaData.getColumnCount(); i++) {
+            row = Utils.getColumnDataByType(rs, metaData, i, row);
+          }
+          listResult.add(row.build());
+        }
+        return listResult;
+      }
+    }
+  }
+
+  public JsonObject executeUpsert(Connection connection, String idColumn,
+      JsonObject body) throws SQLException {
+    validateQuery();
+    JsonObject foundRow;
+    JsonObjectBuilder row = Json.createObjectBuilder();
+    int rowsCount = 0;
+    int i;
+    ResultSet rs;
+    ResultSetMetaData metaData;
+
+    StringBuilder keys = new StringBuilder();
+    StringBuilder values = new StringBuilder();
+    StringBuilder setString = new StringBuilder();
+    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+      if (keys.length() > 0) {
+        keys.append(",");
+      }
+      keys.append(entry.getKey());
+      if (values.length() > 0) {
+        values.append(",");
+      }
+      values.append("?");
+      if (!entry.getKey().equals(idColumn)) {
+        if (setString.length() > 0) {
+          setString.append(",");
+        }
+        setString.append(entry.getKey()).append(" = ?");
+      }
+    }
+
+    String sqlSELECT =
+        "    SELECT" +
+            "        *" +
+            "    FROM " + tableName +
+            "    WHERE " + idColumn + " = ?";
+    String sqlInsert = "INSERT INTO " + tableName +
+        " (" + keys.toString() + ")" +
+        " VALUES (" + values.toString() + ")";
+    String sqlUpdate = "UPDATE " + tableName +
+        " SET " + setString.toString() +
+        " WHERE " + idColumn + " = ?";
+
+    PreparedStatement stmtSelect = null;
+    PreparedStatement stmtInsert = null;
+    PreparedStatement stmtUpdate = null;
+
+    try {
+      connection.setAutoCommit(false);
+
+      stmtSelect = connection.prepareStatement(sqlSELECT);
+      Utils.setStatementParam(stmtSelect, 1, idColumn, body);
+      rs = stmtSelect.executeQuery();
+      metaData = rs.getMetaData();
+      while (rs.next()) {
+        for (i = 1; i <= metaData.getColumnCount(); i++) {
+          row = Utils.getColumnDataByType(rs, metaData, i, row);
+        }
+        rowsCount++;
+        if (rowsCount > 1) {
+          throw new RuntimeException("Error: the number of matching rows is not exactly one");
+        }
+      }
+      foundRow = row.build();
+
+      i = 1;
+      if (foundRow.size() == 0) {
+        stmtInsert = connection.prepareStatement(sqlInsert);
+        for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+          Utils.setStatementParam(stmtInsert, i, entry.getKey(), body);
+          i++;
+        }
+        stmtInsert.execute();
+      } else {
+        stmtUpdate = connection.prepareStatement(sqlUpdate);
+        for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+          if (!entry.getKey().equals(idColumn)) {
+            Utils.setStatementParam(stmtUpdate, i, entry.getKey(), body);
+            i++;
+          }
+        }
+        Utils.setStatementParam(stmtUpdate, i, idColumn, body);
+        stmtUpdate.execute();
+      }
+
+      rs = stmtSelect.executeQuery();
+      metaData = rs.getMetaData();
+      rowsCount = 0;
+      while (rs.next()) {
+        for (i = 1; i <= metaData.getColumnCount(); i++) {
+          row = Utils.getColumnDataByType(rs, metaData, i, row);
+        }
+        rowsCount++;
+        if (rowsCount > 1) {
+          throw new RuntimeException("Error: the number of matching rows is not exactly one");
+        }
+      }
+      connection.commit();
+
+    } finally {
+      if (stmtSelect != null) {
+        stmtSelect.close();
+      }
+      if (stmtInsert != null) {
+        stmtInsert.close();
+      }
+      if (stmtUpdate != null) {
+        stmtUpdate.close();
+      }
+      connection.setAutoCommit(true);
+    }
+    return row.build();
+  }
 
   public void validateQuery() {
     if (tableName == null) {
       throw new RuntimeException("Table name is required field");
     }
-  }
-
-  public static String preProcessSelect(String sqlQuery) {
-    sqlQuery = sqlQuery.trim();
-    if (!isSelect(sqlQuery)) {
-      throw new RuntimeException("Unresolvable SELECT query");
-    }
-    return sqlQuery.replaceAll(Utils.VARS_REGEXP, "?");
-  }
-
-  public static boolean isSelect(String sqlQuery) {
-    String pattern = "select";
-    return sqlQuery.toLowerCase().startsWith(pattern);
   }
 
 }
