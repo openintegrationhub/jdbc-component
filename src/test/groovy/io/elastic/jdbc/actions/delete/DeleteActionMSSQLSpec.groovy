@@ -4,6 +4,7 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
 import io.elastic.jdbc.actions.DeleteRowByPrimaryKey
+import org.junit.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -13,20 +14,19 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 
-//@Ignore
+@Ignore
 class DeleteActionMSSQLSpec extends Specification {
 
   @Shared
-  def user = "john"//System.getenv("CONN_USER_MSSQL")
+  def user = System.getenv("CONN_USER_MSSQL")
   @Shared
-  def password = "elastic123"//System.getenv("CONN_PASSWORD_MSSQL")
+  def password = System.getenv("CONN_PASSWORD_MSSQL")
   @Shared
-  def databaseName = "Test2"//System.getenv("CONN_DBNAME_MSSQL")
+  def databaseName = System.getenv("CONN_DBNAME_MSSQL")
   @Shared
-  def host = "eio-mssql-fra.c79g081qpeyv.eu-central-1.rds.amazonaws.com"
-//System.getenv("CONN_HOST_MSSQL")
+  def host = System.getenv("CONN_HOST_MSSQL")
   @Shared
-  def port = "1433"//System.getenv("CONN_PORT_MSSQL")
+  def port = System.getenv("CONN_PORT_MSSQL")
   @Shared
   def connectionString = "jdbc:sqlserver://" + host + ":" + port + ";database=" + databaseName
   @Shared

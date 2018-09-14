@@ -4,6 +4,7 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
 import io.elastic.jdbc.actions.DeleteRowByPrimaryKey
+import org.junit.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -13,24 +14,23 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 
-//@Ignore
+@Ignore
 class DeleteActionPostrgeSpec extends Specification {
 
   @Shared
-  def user = "elasticio"//System.getenv("CONN_USER_ORACLE")
+  def user = System.getenv("CONN_USER_POSTGRESQL")
   @Shared
-  def password = "2uDyG4hHxR"//System.getenv("CONN_PASSWORD_ORACLE")
+  def password = System.getenv("CONN_PASSWORD_POSTGRESQL")
   @Shared
-  def databaseName = "elasticio_testdb"//System.getenv("CONN_DBNAME_ORACLE")
+  def databaseName = System.getenv("CONN_DBNAME_POSTGRESQL")
   @Shared
-  def host = "ec2-18-194-228-22.eu-central-1.compute.amazonaws.com"
-//System.getenv("CONN_HOST_ORACLE")
+  def host = System.getenv("CONN_HOST_POSTGRESQL")
   @Shared
-  def port = "5432"//System.getenv("CONN_PORT_ORACLE")
+  def port = System.getenv("CONN_PORT_POSTGRESQL")
   @Shared
   def dbEngine = "postgresql"
   @Shared
-  def connectionString = "jdbc:postgresql://" + host + ":" + port + "/" + databaseName
+  def connectionString ="jdbc:postgresql://"+ host + ":" + port + "/" + databaseName
   @Shared
   Connection connection
 

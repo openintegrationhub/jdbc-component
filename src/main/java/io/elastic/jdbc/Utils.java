@@ -241,61 +241,60 @@ public class Utils {
   public static JsonObjectBuilder getColumnDataByType(ResultSet rs, ResultSetMetaData metaData,
       int i, JsonObjectBuilder row) {
     try {
+      final String columnName  = metaData.getColumnName(i);
+      if(null==rs.getObject(columnName)){
+        row.add(columnName, JsonValue.NULL);
+        return row;
+      }
       switch (metaData.getColumnType(i)) {
         case Types.BOOLEAN:
         case Types.BIT:
-          row.add(metaData.getColumnName(i), rs.getBoolean(metaData.getColumnName(i)));
+          row.add(columnName, rs.getBoolean(columnName));
           break;
         case Types.BINARY:
         case Types.VARBINARY:
         case Types.LONGVARBINARY:
-          String floatString = Arrays.toString(rs.getBytes(metaData.getColumnName(i)));
-          row.add(metaData.getColumnName(i), floatString);
+          String floatString = Arrays.toString(rs.getBytes(columnName));
+          row.add(columnName, floatString);
           break;
         case Types.INTEGER:
-          row.add(metaData.getColumnName(i), rs.getInt(metaData.getColumnName(i)));
+          row.add(columnName, rs.getInt(columnName));
           break;
         case Types.NUMERIC:
         case Types.DECIMAL:
-          row.add(metaData.getColumnName(i), rs.getBigDecimal(metaData.getColumnName(i)));
+          row.add(columnName, (rs.getBigDecimal(columnName)!=null));
           break;
         case Types.DOUBLE:
-          row.add(metaData.getColumnName(i), rs.getDouble(metaData.getColumnName(i)));
+          row.add(columnName, rs.getDouble(columnName));
           break;
         case Types.FLOAT:
         case Types.REAL:
-          row.add(metaData.getColumnName(i), rs.getFloat(metaData.getColumnName(i)));
+          row.add(columnName, rs.getFloat(columnName));
           break;
         case Types.SMALLINT:
-          row.add(metaData.getColumnName(i), rs.getShort(metaData.getColumnName(i)));
+          row.add(columnName, rs.getShort(columnName));
           break;
         case Types.TINYINT:
-          row.add(metaData.getColumnName(i), rs.getByte(metaData.getColumnName(i)));
+          row.add(columnName, rs.getByte(columnName));
           break;
         case Types.BIGINT:
-          row.add(metaData.getColumnName(i), rs.getLong(metaData.getColumnName(i)));
+          row.add(columnName, rs.getLong(columnName));
           break;
         case Types.TIMESTAMP:
-          row.add(metaData.getColumnName(i), rs.getTimestamp(metaData.getColumnName(i)).toString());
+          row.add(columnName, rs.getTimestamp(columnName).toString());
           break;
         case Types.DATE:
-          row.add(metaData.getColumnName(i), (rs.getDate(metaData.getColumnName(i)) != null) ? rs
-              .getDate(metaData.getColumnName(i)).toString() : "");
+          row.add(columnName, rs.getDate(columnName).toString());
           break;
         case Types.TIME:
-          row.add(metaData.getColumnName(i), rs.getTime(metaData.getColumnName(i)).toString());
+          row.add(columnName, rs.getTime(columnName).toString());
           break;
         default:
-          String columnName = rs.getString(metaData.getColumnName(i));
-          if (columnName != null) {
-            row.add(metaData.getColumnName(i), columnName);
-          } else {
-            row.add(metaData.getColumnName(i), "");
-          }
+          row.add(columnName, rs.getString(columnName));
           break;
       }
     } catch (SQLException | java.lang.NullPointerException e) {
-      LOGGER.error("Failed to get data by type", e.toString());
+      LOGGER.error("Failed to get data by type", e);
       throw new RuntimeException(e);
     }
     return row;

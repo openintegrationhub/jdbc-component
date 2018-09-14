@@ -8,6 +8,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Map.Entry;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -95,9 +96,6 @@ public abstract class Query {
   abstract public void executeUpdate(Connection connection, String tableName, String idColumn,
       String idValue, JsonObject body) throws SQLException;
 
-  abstract public void executeUpsert(Connection connection, String idColumn,
-      JsonObject body) throws SQLException;
-
   public ArrayList executeSelectTrigger(Connection connection, String sqlQuery)
       throws SQLException {
     try (PreparedStatement stmt = connection.prepareStatement(sqlQuery)) {
@@ -140,6 +138,119 @@ public abstract class Query {
         return listResult;
       }
     }
+  }
+
+  public JsonObject executeUpsert(Connection connection, String idColumn,
+      JsonObject body) throws SQLException {
+    validateQuery();
+    JsonObject foundRow;
+    JsonObjectBuilder row = Json.createObjectBuilder();
+    int rowsCount = 0;
+    int i;
+    ResultSet rs;
+    ResultSetMetaData metaData;
+
+    StringBuilder keys = new StringBuilder();
+    StringBuilder values = new StringBuilder();
+    StringBuilder setString = new StringBuilder();
+    for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+      if (keys.length() > 0) {
+        keys.append(",");
+      }
+      keys.append(entry.getKey());
+      if (values.length() > 0) {
+        values.append(",");
+      }
+      values.append("?");
+      if (!entry.getKey().equals(idColumn)) {
+        if (setString.length() > 0) {
+          setString.append(",");
+        }
+        setString.append(entry.getKey()).append(" = ?");
+      }
+    }
+
+    String sqlSELECT =
+        "    SELECT" +
+            "        *" +
+            "    FROM " + tableName +
+            "    WHERE " + idColumn + " = ?";
+    String sqlInsert = "INSERT INTO " + tableName +
+        " (" + keys.toString() + ")" +
+        " VALUES (" + values.toString() + ")";
+    String sqlUpdate = "UPDATE " + tableName +
+        " SET " + setString.toString() +
+        " WHERE " + idColumn + " = ?";
+
+    PreparedStatement stmtSelect = null;
+    PreparedStatement stmtInsert = null;
+    PreparedStatement stmtUpdate = null;
+
+    try {
+      connection.setAutoCommit(false);
+
+      stmtSelect = connection.prepareStatement(sqlSELECT);
+      Utils.setStatementParam(stmtSelect, 1, idColumn, body);
+      rs = stmtSelect.executeQuery();
+      metaData = rs.getMetaData();
+      while (rs.next()) {
+        for (i = 1; i <= metaData.getColumnCount(); i++) {
+          row = Utils.getColumnDataByType(rs, metaData, i, row);
+        }
+        rowsCount++;
+        if (rowsCount > 1) {
+          throw new RuntimeException("Error: the number of matching rows is not exactly one");
+        }
+      }
+      foundRow = row.build();
+
+      i = 1;
+      if (foundRow.size() == 0) {
+        stmtInsert = connection.prepareStatement(sqlInsert);
+        for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+          Utils.setStatementParam(stmtInsert, i, entry.getKey(), body);
+          i++;
+        }
+        stmtInsert.execute();
+      } else {
+        stmtUpdate = connection.prepareStatement(sqlUpdate);
+        for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+          if (!entry.getKey().equals(idColumn)) {
+            Utils.setStatementParam(stmtUpdate, i, entry.getKey(), body);
+            i++;
+          }
+        }
+        Utils.setStatementParam(stmtUpdate, i, idColumn, body);
+        stmtUpdate.execute();
+      }
+
+      rs = stmtSelect.executeQuery();
+      metaData = rs.getMetaData();
+      rowsCount = 0;
+      while (rs.next()) {
+        for (i = 1; i <= metaData.getColumnCount(); i++) {
+          row = Utils.getColumnDataByType(rs, metaData, i, row);
+        }
+        rowsCount++;
+        if (rowsCount > 1) {
+          throw new RuntimeException("Error: the number of matching rows is not exactly one");
+        }
+      }
+      connection.commit();
+
+    } finally {
+      if (stmtSelect != null) {
+        stmtSelect.close();
+      }
+      if (stmtInsert != null) {
+        stmtInsert.close();
+      }
+      if (stmtUpdate != null) {
+        stmtUpdate.close();
+      }
+      connection.setAutoCommit(true);
+    }
+    return row.build();
   }
 
   public void validateQuery() {

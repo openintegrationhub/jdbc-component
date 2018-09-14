@@ -22,7 +22,7 @@ Following actions are inside:
 ### Requirements
 Before you can deploy any code into elastic.io **you must be a registered elastic.io platform user**. Please see our home page at [http://www.elastic.io](http://www.elastic.io) to learn how. 
 #### Environment variables
-For unit-testing is needed specify following environment variables:
+For unit-testing is needed to specify following environment variables:
 1. Connection to MSSQL:
  - ``CONN_USER_MSSQL`` - user login
  - ``CONN_PASSWORD_MSSQL`` - user password
@@ -192,15 +192,15 @@ Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty respon
 As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
 
 ## Current limitations
-1. Only tables with one [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY") is supported. Message ``Table has not Primary Key. Should be one Primary Key
-`` should be displayed if the table without any primary key will be selected and message ``Composite Primary Key is not supported
-`` should be displayed if the table with composite primary key will be selected.
-2. Only following versions of DataBase are supported:
+1. Only tables with one [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY") is supported. You will see the message ``Table has not Primary Key. Should be one Primary Key
+``, if the selected table doesn't have a primary key. Also, you will see the message ``Composite Primary Key is not supported
+``, if the selected table has composite primary key.
+2. Only following versions of database types are supported:
 - ``MySQL`` - compatible with MySQL Server 5.5, 5.6, 5.7 and 8.0.
 - ``PostgreSQL`` - compatible with PostgreSQL 8.2 and higher
 - ``Oracle`` - compatible with Oracle Database 8.1.7 - 12.1.0.2
 - ``MSSQL`` - compatible with Microsoft SQL Server 2008 R2 and higher
-3. For Action "Upsert by primary key" metadata analysis ignores nullable/non-nullable fields, it will be throw SQL Server exception ``Cannot insert the value NULL into...`` if non-nullable fields don't fill for Insert operation. 
+3. The current implementation of the action ``Upsert By Primary Key`` doesn't mark non-nullable fields as required fields at a dynamic metadata. In case of updating such fields with an empty value you will get SQL Exception ``Cannot insert the value NULL into...``. You should manually fill in all non-nullable fields with previous data, if you want to update part of columns in a row, even if data in that fields doesn't change. 
 
 ## Known issues
 No known issues are there yet.

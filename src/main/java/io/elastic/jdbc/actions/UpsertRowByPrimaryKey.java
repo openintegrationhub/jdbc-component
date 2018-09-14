@@ -29,12 +29,11 @@ public class UpsertRowByPrimaryKey implements Module {
     final JsonObject configuration = parameters.getConfiguration();
     final JsonObject body = parameters.getMessage().getBody();
     JsonObject snapshot = parameters.getSnapshot();
+    JsonObject resultRow;
     String tableName;
     String dbEngine;
     String schemaName = "";
-    ResultSet rs = null;
     String primaryKey = "";
-    StringBuilder primaryValue = new StringBuilder();
     int primaryKeysCount = 0;
 
     if (configuration.containsKey(PROPERTY_TABLE_NAME)
@@ -57,9 +56,8 @@ public class UpsertRowByPrimaryKey implements Module {
 
     LOGGER.info("Executing lookup primary key");
     boolean isOracle = dbEngine.equals(Engines.ORACLE.name().toLowerCase());
-    Connection connection = Utils.getConnection(configuration);
 
-    try {
+    try (Connection connection = Utils.getConnection(configuration)) {
       DatabaseMetaData dbMetaData = connection.getMetaData();
       if (tableName.contains(".")) {
         schemaName =
@@ -67,57 +65,38 @@ public class UpsertRowByPrimaryKey implements Module {
         tableName =
             (isOracle) ? tableName.split("\\.")[1].toUpperCase() : tableName.split("\\.")[1];
       }
-      rs = dbMetaData
+      try (ResultSet rs = dbMetaData
           .getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
-              tableName);
-      while (rs.next()) {
-        primaryKey = rs.getString("COLUMN_NAME");
-        primaryKeysCount++;
-      }
-      if (primaryKeysCount == 1) {
-        LOGGER.info("Executing upsert row by primary key action");
-        for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-          if (entry.getKey().equals(primaryKey)) {
-            LOGGER.info("Primary key{} = {}", entry.getKey(), entry.getValue());
-            primaryValue.append(entry.getValue());
-          }
+              tableName)) {
+        while (rs.next()) {
+          primaryKey = rs.getString("COLUMN_NAME");
+          primaryKeysCount++;
         }
-        Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
-        LOGGER.info("Detected column types: " + Utils.columnTypes);
-        QueryFactory queryFactory = new QueryFactory();
-        Query query = queryFactory.getQuery(dbEngine);
-        LOGGER
-            .info("Execute upsert parameters by PK: {} = {}", primaryKey, primaryValue.toString());
-        query.from(tableName).executeUpsert(connection, primaryKey, body);
-        LOGGER.info("Emit data= {}", body.toString());
-        parameters.getEventEmitter().emitData(new Message.Builder().body(body).build());
-        snapshot = Json.createObjectBuilder().add(PROPERTY_TABLE_NAME, tableName).build();
-        LOGGER.info("Emitting new snapshot {}", snapshot.toString());
-        parameters.getEventEmitter().emitSnapshot(snapshot);
-      } else if (primaryKeysCount == 0) {
-        LOGGER.error("Error: Table has not Primary Key. Should be one Primary Key");
-        throw new IllegalStateException("Table has not Primary Key. Should be one Primary Key");
-      } else {
-        LOGGER.error("Error: Composite Primary Key is not supported");
-        throw new IllegalStateException("Composite Primary Key is not supported");
+        if (primaryKeysCount == 1) {
+          LOGGER.info("Executing upsert row by primary key action");
+          Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
+          LOGGER.info("Detected column types: " + Utils.columnTypes);
+          QueryFactory queryFactory = new QueryFactory();
+          Query query = queryFactory.getQuery(dbEngine);
+          LOGGER
+              .info("Execute upsert parameters by PK: '{}' = {}", primaryKey, body.get(primaryKey));
+          query.from(tableName);
+          resultRow = query.executeUpsert(connection, primaryKey, body);
+          LOGGER.info("Emit data= {}", resultRow);
+          parameters.getEventEmitter().emitData(new Message.Builder().body(resultRow).build());
+          snapshot = Json.createObjectBuilder().add(PROPERTY_TABLE_NAME, tableName).build();
+          LOGGER.info("Emitting new snapshot {}", snapshot.toString());
+          parameters.getEventEmitter().emitSnapshot(snapshot);
+        } else if (primaryKeysCount == 0) {
+          LOGGER.error("Error: Table has not Primary Key. Should be one Primary Key");
+          throw new IllegalStateException("Table has not Primary Key. Should be one Primary Key");
+        } else {
+          LOGGER.error("Error: Composite Primary Key is not supported");
+          throw new IllegalStateException("Composite Primary Key is not supported");
+        }
       }
     } catch (SQLException e) {
       throw new RuntimeException(e);
-    } finally {
-      if (rs != null) {
-        try {
-          rs.close();
-        } catch (SQLException e) {
-          LOGGER.info("Failed to close result set {}", e);
-        }
-      }
-      if (connection != null) {
-        try {
-          connection.close();
-        } catch (SQLException e) {
-          LOGGER.info("Failed to close connection {}", e);
-        }
-      }
     }
   }
 }

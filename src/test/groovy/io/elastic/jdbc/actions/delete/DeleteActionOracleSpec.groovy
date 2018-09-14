@@ -4,6 +4,7 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
 import io.elastic.jdbc.actions.DeleteRowByPrimaryKey
+import org.junit.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -13,24 +14,23 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 
-//@Ignore
+@Ignore
 class DeleteActionOracleSpec extends Specification {
 
   @Shared
-  def user = "elasticio"//System.getenv("CONN_USER_ORACLE")
+  def user = System.getenv("CONN_USER_ORACLE")
   @Shared
-  def password = "PeU13cbKtH"//System.getenv("CONN_PASSWORD_ORACLE")
+  def password = System.getenv("CONN_PASSWORD_ORACLE")
   @Shared
-  def databaseName = "elasticio_testdb"//System.getenv("CONN_DBNAME_ORACLE")
+  def databaseName = System.getenv("CONN_DBNAME_ORACLE")
   @Shared
-  def host = "ec2-18-194-228-22.eu-central-1.compute.amazonaws.com"
-//System.getenv("CONN_HOST_ORACLE")
+  def host = System.getenv("CONN_HOST_ORACLE")
   @Shared
-  def port = "1521"//System.getenv("CONN_PORT_ORACLE")
+  def port = System.getenv("CONN_PORT_ORACLE")
   @Shared
-  def dbEngine = "oracle"//System.getenv("CONN_DBENGINE_ORACLE")
+  def dbEngine = "oracle"
   @Shared
-  def connectionString = "jdbc:oracle:thin:@//" + host + ":" + port + "/XE"
+  def connectionString ="jdbc:oracle:thin:@//" + host + ":" + port + "/XE"
   @Shared
   Connection connection
 

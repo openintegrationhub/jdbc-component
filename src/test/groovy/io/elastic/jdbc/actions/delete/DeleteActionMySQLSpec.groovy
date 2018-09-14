@@ -4,6 +4,7 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
 import io.elastic.jdbc.actions.DeleteRowByPrimaryKey
+import org.junit.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -13,24 +14,23 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 
-//@Ignore
+@Ignore
 class DeleteActionMySQLSpec extends Specification {
 
   @Shared
-  def user = "elasticio"//System.getenv("CONN_USER_MSSQL")
+  def user = System.getenv("CONN_USER_MYSQL")
   @Shared
-  def password = "lo4hDacS5L"//System.getenv("CONN_PASSWORD_MSSQL")
+  def password = System.getenv("CONN_PASSWORD_MYSQL")
   @Shared
-  def databaseName = "elasticio_testdb"//System.getenv("CONN_DBNAME_MSSQL")
+  def databaseName = System.getenv("CONN_DBNAME_MYSQL")
   @Shared
-  def host = "ec2-18-194-228-22.eu-central-1.compute.amazonaws.com"
-//System.getenv("CONN_HOST_MSSQL")
+  def host = System.getenv("CONN_HOST_MYSQL")
   @Shared
-  def port = "3306"//System.getenv("CONN_PORT_MSSQL")
+  def port = System.getenv("CONN_PORT_MYSQL")
   @Shared
-  def dbEngine = "mysql"//System.getenv("CONN_DBENGINE_MSSQL")
+  def dbEngine = "mysql"
   @Shared
-  def connectionString = "jdbc:" + dbEngine + "://" + host + ":" + port + "/" + databaseName + "?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+  def connectionString ="jdbc:" + dbEngine + "://" + host + ":" + port + "/" + databaseName + "?useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
   @Shared
   Connection connection
 
