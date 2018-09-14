@@ -262,7 +262,7 @@ public class Utils {
           break;
         case Types.NUMERIC:
         case Types.DECIMAL:
-          row.add(columnName, (rs.getBigDecimal(columnName) != null));
+          row.add(columnName, rs.getBigDecimal(columnName));
           break;
         case Types.DOUBLE:
           row.add(columnName, rs.getDouble(columnName));
