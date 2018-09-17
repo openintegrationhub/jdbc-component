@@ -85,9 +85,6 @@ public abstract class Query {
   abstract public JsonObject executeLookup(Connection connection, JsonObject body)
       throws SQLException;
 
-  abstract public boolean executeRecordExists(Connection connection, JsonObject body)
-      throws SQLException;
-
   abstract public int executeDelete(Connection connection, JsonObject body) throws SQLException;
 
   abstract public void executeInsert(Connection connection, String tableName, JsonObject body)
@@ -95,6 +92,20 @@ public abstract class Query {
 
   abstract public void executeUpdate(Connection connection, String tableName, String idColumn,
       String idValue, JsonObject body) throws SQLException;
+
+  public boolean executeRecordExists(Connection connection, JsonObject body) throws SQLException {
+    validateQuery();
+    String sql = "SELECT COUNT(*)" +
+        " FROM " + tableName +
+        " WHERE " + lookupField + " = ?";
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      Utils.setStatementParam(stmt, 1, lookupField, body);
+      try (ResultSet rs = stmt.executeQuery()) {
+        rs.next();
+        return rs.getInt(1) > 0;
+      }
+    }
+  }
 
   public ArrayList executeSelectTrigger(Connection connection, String sqlQuery)
       throws SQLException {
@@ -256,6 +267,63 @@ public abstract class Query {
   public void validateQuery() {
     if (tableName == null) {
       throw new RuntimeException("Table name is required field");
+    }
+  }
+
+  public ArrayList getRowsExecutePolling(Connection connection, String sql) throws SQLException {
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      stmt.setTimestamp(1, pollingValue);
+      stmt.setInt(2, countNumber);
+      try (ResultSet rs = stmt.executeQuery()) {
+        ArrayList listResult = new ArrayList();
+        JsonObjectBuilder row = Json.createObjectBuilder();
+        ResultSetMetaData metaData = rs.getMetaData();
+        while (rs.next()) {
+          for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            row = Utils.getColumnDataByType(rs, metaData, i, row);
+            if (metaData.getColumnName(i).toUpperCase().equals(pollingField.toUpperCase())) {
+              if (maxPollingValue.before(rs.getTimestamp(i))) {
+                if (rs.getString(metaData.getColumnName(i)).length() > 10) {
+                  maxPollingValue = java.sql.Timestamp
+                      .valueOf(rs.getString(metaData.getColumnName(i)));
+                } else {
+                  maxPollingValue = java.sql.Timestamp
+                      .valueOf(rs.getString(metaData.getColumnName(i)) + " 00:00:00");
+                }
+              }
+            }
+          }
+          listResult.add(row.build());
+        }
+        return listResult;
+      }
+    }
+  }
+
+  public static JsonObject getLookupRow(Connection connection, JsonObject body, String sql,
+      Integer secondParameter, Integer thirdParameter)
+      throws SQLException {
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+      JsonObjectBuilder row = Json.createObjectBuilder();
+      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
+        Utils.setStatementParam(stmt, 1, entry.getKey(), body);
+      }
+      stmt.setInt(2, secondParameter);
+      stmt.setInt(3, thirdParameter);
+      try (ResultSet rs = stmt.executeQuery()) {
+        ResultSetMetaData metaData = rs.getMetaData();
+        int rowsCount = 0;
+        while (rs.next()) {
+          for (int i = 1; i <= metaData.getColumnCount(); i++) {
+            row = Utils.getColumnDataByType(rs, metaData, i, row);
+          }
+          rowsCount++;
+          if (rowsCount > 1) {
+            throw new RuntimeException("Error: the number of matching rows is not exactly one");
+          }
+        }
+        return row.build();
+      }
     }
   }
 

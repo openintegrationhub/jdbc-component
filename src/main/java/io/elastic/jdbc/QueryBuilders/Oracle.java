@@ -3,22 +3,13 @@ package io.elastic.jdbc.QueryBuilders;
 import io.elastic.jdbc.Utils;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Map;
-import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Oracle extends Query {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(Oracle.class);
-
 
   public ArrayList executePolling(Connection connection) throws SQLException {
     validateQuery();
@@ -29,35 +20,7 @@ public class Oracle extends Query {
         tableName,
         pollingField,
         pollingField);
-    LOGGER.info("SQL Query:, {} with params: {}, {}", sql, pollingValue, countNumber);
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-      /* data types mapping https://docs.oracle.com/cd/B19306_01/java.102/b14188/datamap.htm */
-      stmt.setTimestamp(1, pollingValue);
-      stmt.setInt(2, countNumber);
-      try (ResultSet rs = stmt.executeQuery()) {
-        ArrayList listResult = new ArrayList();
-        JsonObjectBuilder row = Json.createObjectBuilder();
-        ResultSetMetaData metaData = rs.getMetaData();
-        while (rs.next()) {
-          for (int i = 1; i <= metaData.getColumnCount(); i++) {
-            row = Utils.getColumnDataByType(rs, metaData, i, row);
-            if (metaData.getColumnName(i).toUpperCase().equals(pollingField.toUpperCase())) {
-              if (maxPollingValue.before(rs.getTimestamp(i))) {
-                if (rs.getString(metaData.getColumnName(i)).length() > 10) {
-                  maxPollingValue = java.sql.Timestamp
-                      .valueOf(rs.getString(metaData.getColumnName(i)));
-                } else {
-                  maxPollingValue = java.sql.Timestamp
-                      .valueOf(rs.getString(metaData.getColumnName(i)) + " 00:00:00");
-                }
-              }
-            }
-          }
-          listResult.add(row.build());
-        }
-        return listResult;
-      }
-    }
+    return getRowsExecutePolling(connection, sql);
   }
 
   public JsonObject executeLookup(Connection connection, JsonObject body) throws SQLException {
@@ -67,7 +30,7 @@ public class Oracle extends Query {
         tableName + " b) WHERE " + lookupField + " = ? " +
         "AND rnk BETWEEN ? AND ? " +
         "ORDER BY " + lookupField;
-    return Utils.getLookupRow(connection, body, sql, skipNumber, countNumber);
+    return getLookupRow(connection, body, sql, skipNumber, countNumber);
   }
 
   public int executeDelete(Connection connection, JsonObject body) throws SQLException {
@@ -78,14 +41,6 @@ public class Oracle extends Query {
       stmt.setString(1, lookupValue);
       return stmt.executeUpdate();
     }
-  }
-
-  public boolean executeRecordExists(Connection connection, JsonObject body) throws SQLException {
-    validateQuery();
-    String sql = "SELECT COUNT(*)" +
-        " FROM " + tableName +
-        " WHERE " + lookupField + " = ?";
-    return Utils.isRecordExists(connection, body, sql, lookupField);
   }
 
   public void executeInsert(Connection connection, String tableName, JsonObject body)
