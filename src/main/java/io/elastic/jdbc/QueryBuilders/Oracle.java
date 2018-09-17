@@ -12,19 +12,24 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Oracle extends Query {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(Oracle.class);
+
 
   public ArrayList executePolling(Connection connection) throws SQLException {
     validateQuery();
     String sql = String.format("SELECT * FROM ("
-            + "SELECT ROW_NUMBER() OVER( ORDER BY %s) as rn, o.* from %s o  WHERE %s > ?) "
-            + "WHERE rn<? ORDER BY %s",
+            + "SELECT ROW_NUMBER() OVER( ORDER BY %s) as rn, o.* from %s o  WHERE %s >= ?) "
+            + "WHERE rn<=? ORDER BY %s",
         pollingField,
         tableName,
         pollingField,
         pollingField);
-
+    LOGGER.info("SQL Query:, {} with params: {}, {}", sql, pollingValue, countNumber);
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       /* data types mapping https://docs.oracle.com/cd/B19306_01/java.102/b14188/datamap.htm */
       stmt.setTimestamp(1, pollingValue);

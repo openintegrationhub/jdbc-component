@@ -85,7 +85,7 @@ public class GetRowsPollingTrigger implements Module {
       ArrayList<JsonObject> resultList = query.executePolling(connection);
 
       for (int i = 0; i < resultList.size(); i++) {
-        LOGGER.info("Columns count: {} from {}", i + 1, resultList.size());
+        LOGGER.info("Row number: {} from {}", i + 1, resultList.size());
         LOGGER.info("Emitting data {}", resultList.get(i).toString());
         parameters.getEventEmitter()
             .emitData(new Message.Builder().body(resultList.get(i)).build());
