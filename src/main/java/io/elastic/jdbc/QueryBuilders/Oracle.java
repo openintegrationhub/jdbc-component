@@ -23,7 +23,7 @@ public class Oracle extends Query {
   public ArrayList executePolling(Connection connection) throws SQLException {
     validateQuery();
     String sql = String.format("SELECT * FROM ("
-            + "SELECT ROW_NUMBER() OVER( ORDER BY %s) as rn, o.* from %s o  WHERE %s >= ?) "
+            + "SELECT ROW_NUMBER() OVER( ORDER BY %s) as rn, o.* from %s o  WHERE %s > ?) "
             + "WHERE rn<=? ORDER BY %s",
         pollingField,
         tableName,
