@@ -23,14 +23,13 @@ public class MySQL extends Query {
     sql.append(pollingField);
     sql.append(" > ?");
     if (orderField != null) {
-      sql.append(" ORDER BY ").append(orderField);
+      sql.append(" ORDER BY ").append(orderField).append(" ASC");
     }
-    sql.append(" ASC LIMIT ? OFFSET ?");
+    sql.append(" LIMIT ?");
 
     try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
       stmt.setTimestamp(1, pollingValue);
       stmt.setInt(2, countNumber);
-      stmt.setInt(3, skipNumber);
       try (ResultSet rs = stmt.executeQuery()) {
         ArrayList listResult = new ArrayList();
         JsonObjectBuilder row = Json.createObjectBuilder();
