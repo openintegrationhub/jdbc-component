@@ -64,22 +64,12 @@ public class GetRowsPollingTrigger implements Module {
       pollingValue = cts;
     }
 
-    if (snapshot.containsKey(PROPERTY_SKIP_NUMBER)) {
-      skipNumber = snapshot.getInt(PROPERTY_SKIP_NUMBER);
-    }
-
-    if (snapshot.containsKey(PROPERTY_TABLE_NAME) && snapshot.get(PROPERTY_TABLE_NAME) != null
-        && !snapshot.getString(PROPERTY_TABLE_NAME)
-        .equals(tableName)) {
-      skipNumber = 0;
-    }
-
     LOGGER.info("Executing row polling trigger");
     try {
       connection = Utils.getConnection(configuration);
       QueryFactory queryFactory = new QueryFactory();
       Query query = queryFactory.getQuery(dbEngine);
-      query.from(tableName).skip(skipNumber).orderBy(pollingField)
+      query.from(tableName).orderBy(pollingField)
           .rowsPolling(pollingField, pollingValue);
       query.setMaxPollingValue(cts);
       ArrayList<JsonObject> resultList = query.executePolling(connection);
@@ -94,7 +84,6 @@ public class GetRowsPollingTrigger implements Module {
         formattedDate = new SimpleDateFormat(PROPERTY_DATETIME_FORMAT)
             .format(query.getMaxPollingValue());
         snapshot = Json.createObjectBuilder()
-            .add(PROPERTY_SKIP_NUMBER, skipNumber + resultList.size())
             .add(PROPERTY_TABLE_NAME, tableName)
             .add(PROPERTY_POLLING_FIELD, pollingField)
             .add(PROPERTY_POLLING_VALUE, formattedDate).build();
