@@ -90,17 +90,17 @@ public class GetRowsPollingTrigger implements Module {
         parameters.getEventEmitter()
             .emitData(new Message.Builder().body(resultList.get(i)).build());
       }
-
-      formattedDate = new SimpleDateFormat(PROPERTY_DATETIME_FORMAT)
-          .format(query.getMaxPollingValue());
-
-      snapshot = Json.createObjectBuilder()
-          .add(PROPERTY_SKIP_NUMBER, skipNumber + resultList.size())
-          .add(PROPERTY_TABLE_NAME, tableName)
-          .add(PROPERTY_POLLING_FIELD, pollingField)
-          .add(PROPERTY_POLLING_VALUE, formattedDate).build();
-      LOGGER.info("Emitting new snapshot {}", snapshot.toString());
-      parameters.getEventEmitter().emitSnapshot(snapshot);
+      if (resultList.size() > 0) {
+        formattedDate = new SimpleDateFormat(PROPERTY_DATETIME_FORMAT)
+            .format(query.getMaxPollingValue());
+        snapshot = Json.createObjectBuilder()
+            .add(PROPERTY_SKIP_NUMBER, skipNumber + resultList.size())
+            .add(PROPERTY_TABLE_NAME, tableName)
+            .add(PROPERTY_POLLING_FIELD, pollingField)
+            .add(PROPERTY_POLLING_VALUE, formattedDate).build();
+        LOGGER.info("Emitting new snapshot {}", snapshot.toString());
+        parameters.getEventEmitter().emitSnapshot(snapshot);
+      }
     } catch (SQLException e) {
       LOGGER.error("Failed to make request", e.toString());
       throw new RuntimeException(e);
