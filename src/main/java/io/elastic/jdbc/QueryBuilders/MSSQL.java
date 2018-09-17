@@ -28,12 +28,10 @@ public class MSSQL extends Query {
         " )" +
         " SELECT *" +
         " FROM Results_CTE" +
-        " WHERE RowNum > ?" +
-        " AND RowNum < ?";
+        " WHERE RowNum <= ?";
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setTimestamp(1, pollingValue);
-      stmt.setInt(2, skipNumber);
-      stmt.setInt(3, countNumber + skipNumber);
+      stmt.setInt(2, countNumber);
       try (ResultSet rs = stmt.executeQuery()) {
         ArrayList listResult = new ArrayList();
         JsonObjectBuilder row = Json.createObjectBuilder();
