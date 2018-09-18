@@ -17,7 +17,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
@@ -298,45 +297,6 @@ public class Utils {
       throw new RuntimeException(e);
     }
     return row;
-  }
-
-  public static JsonObject getLookupRow(Connection connection, JsonObject body, String sql,
-      Integer secondParameter, Integer thirdParameter)
-      throws SQLException {
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-      JsonObjectBuilder row = Json.createObjectBuilder();
-      for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-        Utils.setStatementParam(stmt, 1, entry.getKey(), body);
-      }
-      stmt.setInt(2, secondParameter);
-      stmt.setInt(3, thirdParameter);
-      try (ResultSet rs = stmt.executeQuery()) {
-        ResultSetMetaData metaData = rs.getMetaData();
-        int rowsCount = 0;
-        while (rs.next()) {
-          for (int i = 1; i <= metaData.getColumnCount(); i++) {
-            row = Utils.getColumnDataByType(rs, metaData, i, row);
-          }
-          rowsCount++;
-          if (rowsCount > 1) {
-            LOGGER.error("Error: the number of matching rows is not exactly one");
-            throw new RuntimeException("Error: the number of matching rows is not exactly one");
-          }
-        }
-        return row.build();
-      }
-    }
-  }
-
-  public static boolean isRecordExists(Connection connection, JsonObject body, String sql,
-      String lookupField) throws SQLException {
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-      Utils.setStatementParam(stmt, 1, lookupField, body);
-      try (ResultSet rs = stmt.executeQuery()) {
-        rs.next();
-        return rs.getInt(1) > 0;
-      }
-    }
   }
 
 }

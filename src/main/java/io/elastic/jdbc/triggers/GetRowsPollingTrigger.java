@@ -25,8 +25,7 @@ public class GetRowsPollingTrigger implements Module {
   private static final String PROPERTY_TABLE_NAME = "tableName";
   private static final String PROPERTY_POLLING_FIELD = "pollingField";
   private static final String PROPERTY_POLLING_VALUE = "pollingValue";
-  private static final String PROPERTY_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss.sss";
-  private static final String PROPERTY_SKIP_NUMBER = "skipNumber";
+  private static final String PROPERTY_DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
   private static final String DATETIME_REGEX = "(\\d{4})-(\\d{2})-(\\d{2}) (\\d{2}):(\\d{2}):(\\d{2})(\\.(\\d{1,3}))?";
 
   @Override
@@ -35,8 +34,6 @@ public class GetRowsPollingTrigger implements Module {
     final JsonObject configuration = parameters.getConfiguration();
     JsonObject snapshot = parameters.getSnapshot();
     checkConfig(configuration);
-    Connection connection = null;
-    Integer skipNumber = 0;
     String pollingField = "";
     Calendar cDate = Calendar.getInstance();
     cDate.set(cDate.get(Calendar.YEAR), cDate.get(Calendar.MONTH), cDate.get(Calendar.DATE), 0, 0,
@@ -64,54 +61,33 @@ public class GetRowsPollingTrigger implements Module {
       pollingValue = cts;
     }
 
-    if (snapshot.containsKey(PROPERTY_SKIP_NUMBER)) {
-      skipNumber = snapshot.getInt(PROPERTY_SKIP_NUMBER);
-    }
-
-    if (snapshot.containsKey(PROPERTY_TABLE_NAME) && snapshot.get(PROPERTY_TABLE_NAME) != null
-        && !snapshot.getString(PROPERTY_TABLE_NAME)
-        .equals(tableName)) {
-      skipNumber = 0;
-    }
-
     LOGGER.info("Executing row polling trigger");
-    try {
-      connection = Utils.getConnection(configuration);
+    try (Connection connection = Utils.getConnection(configuration)) {
       QueryFactory queryFactory = new QueryFactory();
       Query query = queryFactory.getQuery(dbEngine);
-      query.from(tableName).skip(skipNumber).orderBy(pollingField)
+      query.from(tableName).orderBy(pollingField)
           .rowsPolling(pollingField, pollingValue);
       query.setMaxPollingValue(cts);
       ArrayList<JsonObject> resultList = query.executePolling(connection);
 
       for (int i = 0; i < resultList.size(); i++) {
-        LOGGER.info("Columns count: {} from {}", i + 1, resultList.size());
+        LOGGER.info("Row number: {} from {}", i + 1, resultList.size());
         LOGGER.info("Emitting data {}", resultList.get(i).toString());
         parameters.getEventEmitter()
             .emitData(new Message.Builder().body(resultList.get(i)).build());
       }
-
-      formattedDate = new SimpleDateFormat(PROPERTY_DATETIME_FORMAT)
-          .format(query.getMaxPollingValue());
-
-      snapshot = Json.createObjectBuilder()
-          .add(PROPERTY_SKIP_NUMBER, skipNumber + resultList.size())
-          .add(PROPERTY_TABLE_NAME, tableName)
-          .add(PROPERTY_POLLING_FIELD, pollingField)
-          .add(PROPERTY_POLLING_VALUE, formattedDate).build();
-      LOGGER.info("Emitting new snapshot {}", snapshot.toString());
-      parameters.getEventEmitter().emitSnapshot(snapshot);
+      if (resultList.size() > 0) {
+        formattedDate = query.getMaxPollingValue().toString();
+        snapshot = Json.createObjectBuilder()
+            .add(PROPERTY_TABLE_NAME, tableName)
+            .add(PROPERTY_POLLING_FIELD, pollingField)
+            .add(PROPERTY_POLLING_VALUE, formattedDate).build();
+        LOGGER.info("Emitting new snapshot {}", snapshot.toString());
+        parameters.getEventEmitter().emitSnapshot(snapshot);
+      }
     } catch (SQLException e) {
       LOGGER.error("Failed to make request", e.toString());
       throw new RuntimeException(e);
-    } finally {
-      if (connection != null) {
-        try {
-          connection.close();
-        } catch (SQLException e) {
-          LOGGER.error("Failed to close connection", e.toString());
-        }
-      }
     }
   }
 
