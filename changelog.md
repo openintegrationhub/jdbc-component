@@ -1,17 +1,17 @@
-#jdbc Component Change log 
+# jdbc Component Change log 
 
 
 ## [Unrelased]
-###added 
-###change 
-###deprecated 
-###removed 
-###fixed 
-###security 
+### added 
+### change 
+### deprecated 
+### removed 
+### fixed 
+### security 
 
 ## [V2.0] 2018-09-19 elastic.io 
 
-###added 
+### added 
 
 triggers 
 - SELECT 
@@ -23,10 +23,11 @@ actions
 - UPSERT BY PRIMARY KEY (for migration)
 - DELETE BY PRIMARY KEY
 
-###removed 
+### removed 
 actions 
 - CreateOrUpdateRecord
-###fixed 
+
+### fixed 
 - fix issue in postgresql - getDate(null)
 - fix null values as input for select
 
