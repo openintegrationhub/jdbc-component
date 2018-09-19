@@ -1,33 +1,33 @@
-# jdbc Component Change log 
+# jdbc Component Change Log 
 
 
 ## [Unrelased]
-### added 
-### change 
-### deprecated 
-### removed 
-### fixed 
-### security 
+### Added 
+### Change 
+### Deprecated 
+### Removed 
+### Fixed 
+### Security 
 
 ## [V2.0] 2018-09-19 elastic.io 
 
-### added 
+### Added 
 
-triggers 
+Triggers 
 - SELECT 
 - GET ROWS POLLING
 
-actions 
+Actions 
 - SELECT 
 - LOOKUP BY PRIMARY KEY
 - UPSERT BY PRIMARY KEY (for migration)
 - DELETE BY PRIMARY KEY
 
-### removed 
-actions 
+### Removed 
+Actions 
 - CreateOrUpdateRecord
 
-### fixed 
+### Fixed 
 - fix issue in postgresql - getDate(null)
 - fix null values as input for select
 
