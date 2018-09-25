@@ -24,6 +24,7 @@ public class JdbcCredentialsVerifier implements CredentialsVerifier {
             connection = Utils.getConnection(SailorVersionsAdapter.javaxToGson(configuration));
             logger.info("Successfully connected to database. Credentials verified.");
         } catch (Exception e) {
+            logger.error("Failed to connect to database", e);
             throw new InvalidCredentialsException("Failed to connect to database", e);
         } finally {
             if (connection != null) {
