@@ -4,28 +4,29 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public abstract class Query {
+@Deprecated
+public abstract class QueryOld {
     protected Integer skipNumber = 0;
     protected Integer countNumber = 5000;
     protected String tableName = null;
     protected String orderField = null;
 
-    public Query skip(Integer skip) {
+    public QueryOld skip(Integer skip) {
         this.skipNumber = skip;
         return this;
     }
 
-    public Query count(Integer count) {
+    public QueryOld count(Integer count) {
         this.countNumber = count;
         return this;
     }
 
-    public Query from(String tableName) {
+    public QueryOld from(String tableName) {
         this.tableName = tableName;
         return this;
     }
 
-    public Query orderBy(String fieldName) {
+    public QueryOld orderBy(String fieldName) {
         this.orderField = fieldName;
         return this;
     }

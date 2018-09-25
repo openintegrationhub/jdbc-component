@@ -5,7 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class Oracle extends Query {
+@Deprecated
+public class OracleOld extends QueryOld {
     public ResultSet execute(Connection connection) throws SQLException {
         validateQuery();
         String sql = "SELECT * FROM " +

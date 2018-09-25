@@ -5,38 +5,41 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.EventEmitter.Callback
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import io.elastic.jdbc.triggers.SelectTrigger
+import io.elastic.jdbc.triggers.SelectTriggerOld
 import spock.lang.Ignore
+import spock.lang.Shared
 import spock.lang.Specification
 
 import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class SelectTriggerMysqlSpec extends Specification {
+class SelectTriggerOldMSSQLOldSpec extends Specification {
+
+    @Shared def connectionString = ""
+    @Shared def user = ""
+    @Shared def password = ""
+    @Shared Connection connection
 
     def setup() {
-        String connectionString = ""
-        String user = ""
-        String password = ""
-
-        Connection connection;
         connection = DriverManager.getConnection(connectionString, user, password)
 
-        String sql = "DROP TABLE IF EXISTS stars"
+        String sql = "IF OBJECT_ID('stars', 'U') IS NOT NULL\n" +
+                "  DROP TABLE stars;"
         connection.createStatement().execute(sql)
 
-        sql = "CREATE TABLE stars (id int, isDead boolean, name varchar(255) NOT NULL, radius int, destination float)"
+        sql = "CREATE TABLE stars (ID int, name varchar(255) NOT NULL, radius int, destination float, birth DATETIME)"
         connection.createStatement().execute(sql)
 
-        sql = "INSERT INTO stars (id, isDead, name, radius, destination) VALUES (1, false, 'Sun', 50, 170), (2, false, 'Shit', 90, 90000)"
+        sql = "INSERT INTO stars (ID, name, radius, destination, birth) VALUES (1, 'Sun', 50, 170, '2015-05-26 14:08:38')"
         connection.createStatement().execute(sql)
     }
 
-    def cleanup() {
-        Connection connection = DriverManager.getConnection("", "", "");
-        String sql = "DROP TABLE IF EXISTS stars";
-        connection.createStatement().execute(sql);
+    def cleanupSpec() {
+        String sql = "IF OBJECT_ID('stars', 'U') IS NOT NULL\n" +
+                "  DROP TABLE stars;"
+        connection.createStatement().execute(sql)
+        connection.close()
     }
 
     def "make a SELECT request" () {
@@ -54,32 +57,30 @@ class SelectTriggerMysqlSpec extends Specification {
                 .onRebound(onreboundCallback)
                 .onHttpReplyCallback(httpReplyCallback).build();
 
-        SelectTrigger selectAction = new SelectTrigger();
+        SelectTriggerOld selectAction = new SelectTriggerOld(emitter);
 
         given:
         Message msg = new Message.Builder().build();
 
         JsonObject config = new JsonObject()
-        config.addProperty("databaseName", "")
-        config.addProperty("dbEngine", "mysql")
-        config.addProperty("orderField", "id")
-        config.addProperty("user", "")
-        config.addProperty("password", "")
+        config.addProperty("orderField", "name")
         config.addProperty("tableName", "stars")
+        config.addProperty("user", user)
+        config.addProperty("password", password)
+        config.addProperty("dbEngine", "mssql")
         config.addProperty("host", "")
+        config.addProperty("databaseName", "")
 
         JsonObject snapshot = new JsonObject()
         snapshot.addProperty("skipNumber", 0)
 
         when:
-        ExecutionParameters params = new ExecutionParameters(msg, emitter,
-                SailorVersionsAdapter.gsonToJavax(config), SailorVersionsAdapter.gsonToJavax(snapshot))
+        ExecutionParameters params = new ExecutionParameters(msg, emitter, SailorVersionsAdapter.gsonToJavax(config), SailorVersionsAdapter.gsonToJavax(snapshot))
         selectAction.execute(params)
 
         then:
         0 * errorCallback.receive(_)
-        1 * dataCallback.receive({ it.toString() =='{"body":{"id":"2","isDead":"0","name":"Shit","radius":"90","destination":"90000"},"attachments":{}}' })
-        1 * dataCallback.receive({ it.toString() =='{"body":{"id":"1","isDead":"0","name":"Sun","radius":"50","destination":"170"},"attachments":{}}' })
-        1 * snapshotCallback.receive({ it.toString() == '{"skipNumber":2,"tableName":"stars"}'})
+        1 * dataCallback.receive({ it.toString() =='{"body":{"ID":"1","name":"Sun","radius":"50","destination":"170.0","birth":"2015-05-26 14:08:38.0","RowNum":"1"},"attachments":{}}' })
+        1 * snapshotCallback.receive({ it.toString() == '{"skipNumber":1,"tableName":"stars"}'})
     }
 }

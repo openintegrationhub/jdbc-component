@@ -8,7 +8,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class TableNameProviderMSSQLSpec extends Specification {
+class TableNameProviderOldPostgresqlSpec extends Specification {
 
     @Shared def connectionString = ""
     @Shared def user = ""
@@ -19,22 +19,20 @@ class TableNameProviderMSSQLSpec extends Specification {
     @Shared JsonObject config
 
     def setupSpec() {
-        Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         connection = DriverManager.getConnection(connectionString, user, password)
         config = new JsonObject()
         config.addProperty("user", user)
         config.addProperty("password", password)
-        config.addProperty("dbEngine", "mssql")
+        config.addProperty("dbEngine", "postgresql")
         config.addProperty("host", "")
         config.addProperty("databaseName", "")
     }
 
     def cleanupSpec() {
-        connection.createStatement().execute("DROP TABLE users");
-        connection.createStatement().execute("DROP TABLE products");
-        connection.createStatement().execute("DROP TABLE orders");
-
-        connection.close();
+        connection.createStatement().execute("DROP TABLE IF EXISTS users");
+        connection.createStatement().execute("DROP TABLE IF EXISTS products");
+        connection.createStatement().execute("DROP TABLE IF EXISTS orders");
+        connection.close()
     }
 
     def "get selectbox values, successful"() {
@@ -47,14 +45,10 @@ class TableNameProviderMSSQLSpec extends Specification {
         connection.createStatement().execute(sql2);
         connection.createStatement().execute(sql3);
 
+        TableNameProviderOld provider = new TableNameProviderOld();
 
-        TableNameProvider provider = new TableNameProvider();
+        JsonObject model = SailorVersionsAdapter.javaxToGson(provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config)));
 
-        when:
-        JsonObject model = provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config));
-
-        then:
-        print model
-        model.toString().contains('"dbo.orders":"dbo.orders","dbo.products":"dbo.products"')
+        expect: model.toString() == '{"public.decimals":"public.decimals","public.orders":"public.orders","public.products":"public.products","public.tetstable":"public.tetstable","public.users":"public.users","public.pg_stat_statements":"public.pg_stat_statements"}'
     }
 }

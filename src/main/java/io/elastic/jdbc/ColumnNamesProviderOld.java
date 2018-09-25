@@ -10,8 +10,9 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 import java.util.Map;
 
-public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModelProvider {
-    private static final Logger logger = LoggerFactory.getLogger(ColumnNamesProvider.class);
+@Deprecated
+public class ColumnNamesProviderOld implements DynamicMetadataProvider, SelectModelProvider {
+    private static final Logger logger = LoggerFactory.getLogger(ColumnNamesProviderOld.class);
 
     public javax.json.JsonObject getSelectModel(javax.json.JsonObject configuration) {
         JsonObject result = new JsonObject();
@@ -53,7 +54,7 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
         String schemaName = null;
         Boolean isEmpty = true;
         try {
-            connection = Utils.getConnection(SailorVersionsAdapter.javaxToGson(configuration));
+            connection = UtilsOld.getConnection(SailorVersionsAdapter.javaxToGson(configuration));
             DatabaseMetaData dbMetaData = connection.getMetaData();
             if (tableName.contains(".")) {
                 schemaName = tableName.split("\\.")[0];

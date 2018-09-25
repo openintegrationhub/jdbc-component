@@ -2,13 +2,12 @@ package io.elastic.jdbc.actions;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
 import io.elastic.api.Module;
-import io.elastic.jdbc.Engines;
+import io.elastic.jdbc.EnginesOld;
 import io.elastic.jdbc.SailorVersionsAdapter;
-import io.elastic.jdbc.Utils;
+import io.elastic.jdbc.UtilsOld;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,10 +41,10 @@ public class CreateOrUpdateRecord implements Module {
             idColumnValue = body.get(idColumn).getAsString();
         }
         logger.info("ID column value: {}", idColumnValue);
-        String db = configuration.get(Utils.CFG_DB_ENGINE).getAsString();
-        isOracle = db.equals(Engines.ORACLE.name().toLowerCase());
+        String db = configuration.get(UtilsOld.CFG_DB_ENGINE).getAsString();
+        isOracle = db.equals(EnginesOld.ORACLE.name().toLowerCase());
         try {
-            connection = Utils.getConnection(configuration);
+            connection = UtilsOld.getConnection(configuration);
             columnTypes = getColumnTypes(tableName);
             logger.info("Detected column types: " + columnTypes);
             if (recordExists(tableName, idColumn, idColumnValue)) {

@@ -1,6 +1,7 @@
 package io.elastic.jdbc;
 
-public enum Engines {
+@Deprecated
+public enum EnginesOld {
     MYSQL("com.mysql.jdbc.Driver", 3306) {
         @Override
         protected String getSubprotocol(String host, Integer port, String db) {
@@ -54,7 +55,7 @@ public enum Engines {
     private final String driverClassName;
     private Integer defaultPort;
 
-    Engines(final String driverClassName, final Integer defaultPort) {
+    EnginesOld(final String driverClassName, final Integer defaultPort) {
         this.driverClassName = driverClassName;
         this.defaultPort = defaultPort;
     }

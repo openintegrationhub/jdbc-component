@@ -1,17 +1,18 @@
 package io.elastic.jdbc
 
 import com.google.gson.JsonObject
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
 import java.sql.Connection
 import java.sql.DriverManager
 
+@Ignore
+class TableNameProviderOldMysqlSpec extends Specification {
 
-class TableNameProviderSpec extends Specification {
-
-    @Shared def connectionString = "jdbc:hsqldb:mem:tests"
-    @Shared def user = "sa"
+    @Shared def connectionString = ""
+    @Shared def user = ""
     @Shared def password = ""
 
     @Shared Connection connection
@@ -23,15 +24,16 @@ class TableNameProviderSpec extends Specification {
         config = new JsonObject()
         config.addProperty("user", user)
         config.addProperty("password", password)
-        config.addProperty("dbEngine", "hsqldb")
-        config.addProperty("host", "localhost")
-        config.addProperty("databaseName", "mem:tests")
+        config.addProperty("dbEngine", "mysql")
+        config.addProperty("host", "")
+        config.addProperty("databaseName", "")
     }
 
-    def cleanup() {
-        connection.createStatement().execute("DROP TABLE users IF EXISTS");
-        connection.createStatement().execute("DROP TABLE products IF EXISTS");
-        connection.createStatement().execute("DROP TABLE orders IF EXISTS");
+    def cleanupSpec() {
+        connection.createStatement().execute("DROP TABLE IF EXISTS users");
+        connection.createStatement().execute("DROP TABLE IF EXISTS products");
+        connection.createStatement().execute("DROP TABLE IF EXISTS orders");
+        connection.close();
     }
 
     def "get selectbox values, successful"() {
@@ -46,20 +48,10 @@ class TableNameProviderSpec extends Specification {
         connection.createStatement().execute(sql3);
 
 
-        TableNameProvider provider = new TableNameProvider();
+        TableNameProviderOld provider = new TableNameProviderOld();
 
         JsonObject model = SailorVersionsAdapter.javaxToGson(provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config)));
 
-        expect: model.toString() == '{"PUBLIC.ORDERS":"PUBLIC.ORDERS","PUBLIC.PRODUCTS":"PUBLIC.PRODUCTS","PUBLIC.USERS":"PUBLIC.USERS"}'
-    }
-
-
-    def "get selectbox values, no tables"() {
-
-        TableNameProvider provider = new TableNameProvider();
-
-        JsonObject model = SailorVersionsAdapter.javaxToGson(provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config)));
-
-        expect: model.toString() == '{"":"no tables"}'
+        expect: model.toString().contains('"orders":"orders","products":"products"')
     }
 }

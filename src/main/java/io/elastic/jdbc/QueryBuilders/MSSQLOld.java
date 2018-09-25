@@ -5,7 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class MSSQL extends Query {
+@Deprecated
+public class MSSQLOld extends QueryOld {
     public ResultSet execute(Connection connection) throws SQLException {
         validateQuery();
         String sql = "WITH Results_CTE AS" +

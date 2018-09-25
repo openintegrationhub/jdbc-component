@@ -12,9 +12,10 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-public class TableNameProvider implements SelectModelProvider {
+@Deprecated
+public class TableNameProviderOld implements SelectModelProvider {
 
-    private static final Logger logger = LoggerFactory.getLogger(TableNameProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(TableNameProviderOld.class);
 
     public javax.json.JsonObject getSelectModel(javax.json.JsonObject configuration) {
         logger.info("About to retrieve table name");
@@ -24,7 +25,7 @@ public class TableNameProvider implements SelectModelProvider {
         ResultSet rs = null;
 
         try {
-            connection = Utils.getConnection(SailorVersionsAdapter.javaxToGson(configuration));
+            connection = UtilsOld.getConnection(SailorVersionsAdapter.javaxToGson(configuration));
             logger.info("Successfully connected to DB");
 
             // get metadata

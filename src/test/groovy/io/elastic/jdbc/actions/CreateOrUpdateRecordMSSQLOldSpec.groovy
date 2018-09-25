@@ -13,7 +13,7 @@ import java.sql.DriverManager
 import java.sql.ResultSet
 
 @Ignore
-class CreateOrUpdateRecordMSSQLSpec extends Specification {
+class CreateOrUpdateRecordMSSQLOldSpec extends Specification {
 
 	@Shared def connectionString = ""
 	@Shared def user = ""

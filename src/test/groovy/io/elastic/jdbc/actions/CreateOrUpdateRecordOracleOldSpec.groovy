@@ -12,7 +12,7 @@ import java.sql.DriverManager
 import java.sql.ResultSet
 
 @Ignore
-class CreateOrUpdateRecordOracleSpec extends Specification {
+class CreateOrUpdateRecordOracleOldSpec extends Specification {
 	@Shared def connectionString = ""
 	@Shared def user = ""
 	@Shared def password = ""

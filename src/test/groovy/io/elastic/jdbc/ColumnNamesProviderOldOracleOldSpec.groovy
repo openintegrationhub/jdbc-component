@@ -9,7 +9,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class ColumnNamesProviderOracleSpec extends Specification {
+class ColumnNamesProviderOldOracleOldSpec extends Specification {
     @Shared def connectionString = ""
     @Shared def user = ""
     @Shared def password = ""
@@ -40,7 +40,7 @@ class ColumnNamesProviderOracleSpec extends Specification {
         config.addProperty("host", "")
         config.addProperty("databaseName", "ORCL")
         config.addProperty("tableName", "ELASTICIO.STARS")
-        ColumnNamesProvider provider = new ColumnNamesProvider()
+        ColumnNamesProviderOld provider = new ColumnNamesProviderOld()
         JsonObject meta = SailorVersionsAdapter.javaxToGson(provider.getMetaModel(SailorVersionsAdapter.gsonToJavax(config)));
         print meta
         expect: meta.toString() == "{\"out\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}},\"in\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}}}"

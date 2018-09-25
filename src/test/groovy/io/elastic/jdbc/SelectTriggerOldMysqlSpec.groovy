@@ -5,44 +5,38 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.EventEmitter.Callback
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import io.elastic.jdbc.triggers.SelectTrigger
+import io.elastic.jdbc.triggers.SelectTriggerOld
 import spock.lang.Ignore
-import spock.lang.Shared
 import spock.lang.Specification
 
 import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class SelectTriggerOracleSpec extends Specification {
-
-    @Shared def connectionString = ""
-    @Shared def user = ""
-    @Shared def password = ""
-    @Shared Connection connection
+class SelectTriggerOldMysqlSpec extends Specification {
 
     def setup() {
+        String connectionString = ""
+        String user = ""
+        String password = ""
+
+        Connection connection;
         connection = DriverManager.getConnection(connectionString, user, password)
 
-        String sql = "BEGIN" +
-                "   EXECUTE IMMEDIATE 'DROP TABLE stars';" +
-                "EXCEPTION" +
-                "   WHEN OTHERS THEN" +
-                "      IF SQLCODE != -942 THEN" +
-                "         RAISE;" +
-                "      END IF;" +
-                "END;"
+        String sql = "DROP TABLE IF EXISTS stars"
         connection.createStatement().execute(sql)
 
-        sql = "CREATE TABLE stars (ID number, name varchar(255) NOT NULL, radius number, destination float)"
+        sql = "CREATE TABLE stars (id int, isDead boolean, name varchar(255) NOT NULL, radius int, destination float)"
         connection.createStatement().execute(sql)
 
-        sql = "INSERT INTO stars (ID, name, radius, destination) VALUES (1, 'Sun', 50, 170)"
+        sql = "INSERT INTO stars (id, isDead, name, radius, destination) VALUES (1, false, 'Sun', 50, 170), (2, false, 'Shit', 90, 90000)"
         connection.createStatement().execute(sql)
     }
 
     def cleanup() {
-        connection.close();
+        Connection connection = DriverManager.getConnection("", "", "");
+        String sql = "DROP TABLE IF EXISTS stars";
+        connection.createStatement().execute(sql);
     }
 
     def "make a SELECT request" () {
@@ -60,19 +54,19 @@ class SelectTriggerOracleSpec extends Specification {
                 .onRebound(onreboundCallback)
                 .onHttpReplyCallback(httpReplyCallback).build();
 
-        SelectTrigger selectAction = new SelectTrigger();
+        SelectTriggerOld selectAction = new SelectTriggerOld();
 
         given:
         Message msg = new Message.Builder().build();
 
         JsonObject config = new JsonObject()
-        config.addProperty("orderField", "name")
-        config.addProperty("user", user)
-        config.addProperty("password", password)
-        config.addProperty("dbEngine", "oracle")
-        config.addProperty("host", "")
-        config.addProperty("databaseName", "ORCL")
+        config.addProperty("databaseName", "")
+        config.addProperty("dbEngine", "mysql")
+        config.addProperty("orderField", "id")
+        config.addProperty("user", "")
+        config.addProperty("password", "")
         config.addProperty("tableName", "stars")
+        config.addProperty("host", "")
 
         JsonObject snapshot = new JsonObject()
         snapshot.addProperty("skipNumber", 0)
@@ -84,7 +78,8 @@ class SelectTriggerOracleSpec extends Specification {
 
         then:
         0 * errorCallback.receive(_)
-        1 * dataCallback.receive({ it.toString() =='{"body":{"ID":"1","NAME":"Sun","RADIUS":"50","DESTINATION":"170","RNK":"1"},"attachments":{}}' })
-        1 * snapshotCallback.receive({ it.toString() == '{"skipNumber":1,"tableName":"stars"}'})
+        1 * dataCallback.receive({ it.toString() =='{"body":{"id":"2","isDead":"0","name":"Shit","radius":"90","destination":"90000"},"attachments":{}}' })
+        1 * dataCallback.receive({ it.toString() =='{"body":{"id":"1","isDead":"0","name":"Sun","radius":"50","destination":"170"},"attachments":{}}' })
+        1 * snapshotCallback.receive({ it.toString() == '{"skipNumber":2,"tableName":"stars"}'})
     }
 }

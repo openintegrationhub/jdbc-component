@@ -6,7 +6,7 @@ import com.google.gson.JsonObject
 import java.sql.*
 
 
-class ColumnNamesProviderSpec extends Specification {
+class ColumnNamesProviderOldSpec extends Specification {
 
     def setup() {
         Connection connection = DriverManager.getConnection("jdbc:hsqldb:tests", "sa", "");
@@ -30,7 +30,7 @@ class ColumnNamesProviderSpec extends Specification {
         config.addProperty("tableName", "STARS")
         config.addProperty("host", "localhost")
         config.addProperty("databaseName", "tests")
-        ColumnNamesProvider provider = new ColumnNamesProvider()
+        ColumnNamesProviderOld provider = new ColumnNamesProviderOld()
 
         expect: provider.getMetaModel((SailorVersionsAdapter.gsonToJavax(config))).toString() == "{\"out\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"ISDEAD\":{\"required\":false,\"title\":\"ISDEAD\",\"type\":\"boolean\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}},\"in\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"ISDEAD\":{\"required\":false,\"title\":\"ISDEAD\",\"type\":\"boolean\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}}}"
     }
@@ -41,7 +41,7 @@ class ColumnNamesProviderSpec extends Specification {
         config.addProperty("user", " ")
         config.addProperty("password", " ")
         when:
-        ColumnNamesProvider provider = new ColumnNamesProvider()
+        ColumnNamesProviderOld provider = new ColumnNamesProviderOld()
         provider.getColumns(SailorVersionsAdapter.gsonToJavax(config))
         then:
         def e = thrown(RuntimeException)

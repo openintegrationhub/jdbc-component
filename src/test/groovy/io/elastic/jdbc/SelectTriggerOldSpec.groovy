@@ -3,7 +3,7 @@ package io.elastic.jdbc
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import io.elastic.jdbc.triggers.SelectTrigger
+import io.elastic.jdbc.triggers.SelectTriggerOld
 import spock.lang.Specification
 import com.google.gson.JsonObject
 
@@ -12,7 +12,7 @@ import io.elastic.api.EventEmitter.Callback
 import java.sql.*
 
 
-class SelectTriggerSpec extends Specification {
+class SelectTriggerOldSpec extends Specification {
 
     def setup() {
         String connectionString = "jdbc:hsqldb:tests"
@@ -52,7 +52,7 @@ class SelectTriggerSpec extends Specification {
                 .onRebound(onreboundCallback)
                 .onHttpReplyCallback(httpReplyCallback).build();
 
-        SelectTrigger selectAction = new SelectTrigger();
+        SelectTriggerOld selectAction = new SelectTriggerOld();
 
         given:
         Message msg = new Message.Builder().build();
@@ -95,7 +95,7 @@ class SelectTriggerSpec extends Specification {
                 .onRebound(onreboundCallback)
                 .onHttpReplyCallback(httpReplyCallback).build();
 
-        SelectTrigger selectAction = new SelectTrigger();
+        SelectTriggerOld selectAction = new SelectTriggerOld();
 
         given:
         Message msg = new Message.Builder().build();

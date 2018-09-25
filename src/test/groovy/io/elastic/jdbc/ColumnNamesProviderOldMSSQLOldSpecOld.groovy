@@ -9,7 +9,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class ColumnNamesProviderMSSQLSpec extends Specification {
+class ColumnNamesProviderOldMSSQLOldSpecOld extends Specification {
     @Shared def connectionString = ""
     @Shared def user = ""
     @Shared def password = ""
@@ -38,7 +38,7 @@ class ColumnNamesProviderMSSQLSpec extends Specification {
         config.addProperty("dbEngine", "mssql")
         config.addProperty("host", "")
         config.addProperty("databaseName", "")
-        ColumnNamesProvider provider = new ColumnNamesProvider()
+        ColumnNamesProviderOld provider = new ColumnNamesProviderOld()
         JsonObject meta = provider.getMetaModel((SailorVersionsAdapter.gsonToJavax(config)));
         print meta
         expect: meta.toString() == "{\"out\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"name\":{\"required\":true,\"title\":\"name\",\"type\":\"string\"},\"radius\":{\"required\":false,\"title\":\"radius\",\"type\":\"number\"},\"destination\":{\"required\":false,\"title\":\"destination\",\"type\":\"number\"}}},\"in\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"name\":{\"required\":true,\"title\":\"name\",\"type\":\"string\"},\"radius\":{\"required\":false,\"title\":\"radius\",\"type\":\"number\"},\"destination\":{\"required\":false,\"title\":\"destination\",\"type\":\"number\"}}}}"

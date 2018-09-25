@@ -8,7 +8,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class ColumnNamesProviderPostgresqlSpec extends Specification {
+class ColumnNamesProviderOldPostgresqlSpec extends Specification {
 
     def setup() {
         Connection connection = DriverManager.getConnection("", "", "");
@@ -35,7 +35,7 @@ class ColumnNamesProviderPostgresqlSpec extends Specification {
         config.addProperty("password", "")
         config.addProperty("tableName", "stars")
         config.addProperty("host", "")
-        ColumnNamesProvider provider = new ColumnNamesProvider()
+        ColumnNamesProviderOld provider = new ColumnNamesProviderOld()
 
         expect: provider.getMetaModel((SailorVersionsAdapter.gsonToJavax(config))).toString() == "{\"out\":{\"type\":\"object\",\"properties\":{\"id\":{\"required\":false,\"title\":\"id\",\"type\":\"number\"},\"isdead\":{\"required\":false,\"title\":\"isdead\",\"type\":\"boolean\"},\"name\":{\"required\":true,\"title\":\"name\",\"type\":\"string\"},\"radius\":{\"required\":false,\"title\":\"radius\",\"type\":\"number\"},\"destination\":{\"required\":false,\"title\":\"destination\",\"type\":\"number\"}}},\"in\":{\"type\":\"object\",\"properties\":{\"id\":{\"required\":false,\"title\":\"id\",\"type\":\"number\"},\"isdead\":{\"required\":false,\"title\":\"isdead\",\"type\":\"boolean\"},\"name\":{\"required\":true,\"title\":\"name\",\"type\":\"string\"},\"radius\":{\"required\":false,\"title\":\"radius\",\"type\":\"number\"},\"destination\":{\"required\":false,\"title\":\"destination\",\"type\":\"number\"}}}}"
     }

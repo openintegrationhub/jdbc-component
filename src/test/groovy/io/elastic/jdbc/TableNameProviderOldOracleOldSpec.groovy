@@ -8,7 +8,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class TableNameProviderOracleSpec extends Specification {
+class TableNameProviderOldOracleOldSpec extends Specification {
 
     @Shared def connectionString = ""
     @Shared def user = ""
@@ -49,7 +49,7 @@ class TableNameProviderOracleSpec extends Specification {
         connection.createStatement().execute(sql3);
 
 
-        TableNameProvider provider = new TableNameProvider();
+        TableNameProviderOld provider = new TableNameProviderOld();
 
         when:
         JsonObject model = SailorVersionsAdapter.javaxToGson(provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config)));

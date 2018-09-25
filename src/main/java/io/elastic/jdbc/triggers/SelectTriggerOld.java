@@ -6,18 +6,18 @@ import com.google.gson.JsonObject;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
 import io.elastic.api.Module;
-import io.elastic.jdbc.QueryBuilders.Query;
+import io.elastic.jdbc.QueryBuilders.QueryOld;
 import io.elastic.jdbc.SailorVersionsAdapter;
 import io.elastic.jdbc.TriggerQueryFactory;
-import io.elastic.jdbc.Utils;
+import io.elastic.jdbc.UtilsOld;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 
 @Deprecated
-public class SelectTrigger implements Module {
-    private static final Logger logger = LoggerFactory.getLogger(SelectTrigger.class);
+public class SelectTriggerOld implements Module {
+    private static final Logger logger = LoggerFactory.getLogger(SelectTriggerOld.class);
     public static final String PROPERTY_TABLE_NAME = "tableName";
     public static final String PROPERTY_ORDER_FIELD = "orderField";
 
@@ -27,7 +27,7 @@ public class SelectTrigger implements Module {
         logger.info("About to execute select action");
         JsonArray rows = new JsonArray();
         JsonObject config = SailorVersionsAdapter.javaxToGson(parameters.getConfiguration());
-        Connection connection = Utils.getConnection(config);
+        Connection connection = UtilsOld.getConnection(config);
         checkConfig(config);
 
         String dbEngine = config.get("dbEngine").getAsString();
@@ -46,9 +46,9 @@ public class SelectTrigger implements Module {
         logger.info("Executing select action");
         try {
             TriggerQueryFactory queryFactory = new TriggerQueryFactory();
-            Query query = queryFactory.getQuery(dbEngine);
-            query.from(tableName).skip(skipNumber).orderBy(orderField);
-            rs = query.execute(connection);
+            QueryOld queryOld = queryFactory.getQuery(dbEngine);
+            queryOld.from(tableName).skip(skipNumber).orderBy(orderField);
+            rs = queryOld.execute(connection);
             ResultSetMetaData metaData = rs.getMetaData();
             while (rs.next()) {
                 JsonObject row = new JsonObject();

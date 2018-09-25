@@ -8,8 +8,9 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.DriverManager;
 
-public class Utils {
-    private static final Logger logger = LoggerFactory.getLogger(Utils.class);
+@Deprecated
+public class UtilsOld {
+    private static final Logger logger = LoggerFactory.getLogger(UtilsOld.class);
 
     public static final String CFG_DATABASE_NAME = "databaseName";
     public static final String CFG_PASSWORD = "password";
@@ -22,7 +23,7 @@ public class Utils {
         final String engine = getRequiredNonEmptyString(config, CFG_DB_ENGINE, "Engine is required").toLowerCase();
         final String host = getRequiredNonEmptyString(config, CFG_HOST, "Host is required");
         final String user = getRequiredNonEmptyString(config, CFG_USER, "User is required");
-        final Engines engineType = Engines.valueOf(engine.toUpperCase());
+        final EnginesOld engineType = EnginesOld.valueOf(engine.toUpperCase());
         final Integer port = getPort(config, engineType);
         final String password = getPassword(config, engineType);
         final String databaseName = getRequiredNonEmptyString(config, CFG_DATABASE_NAME, "Database name is required");
@@ -37,10 +38,10 @@ public class Utils {
         }
     }
 
-    private static String getPassword(final JsonObject config, final Engines engineType) {
+    private static String getPassword(final JsonObject config, final EnginesOld engineType) {
         final String password = getNonNullString(config, CFG_PASSWORD);
 
-        if (password.isEmpty() && engineType != Engines.HSQLDB) {
+        if (password.isEmpty() && engineType != EnginesOld.HSQLDB) {
             throw new RuntimeException("Password is required");
         }
 
@@ -64,7 +65,7 @@ public class Utils {
         return "";
     }
 
-    private static Integer getPort(final JsonObject config, final Engines engineType) {
+    private static Integer getPort(final JsonObject config, final EnginesOld engineType) {
         final JsonElement value = config.get(CFG_PORT);
         if (value != null && !value.isJsonNull() && !value.getAsString().isEmpty()) {
             return value.getAsInt();

@@ -5,7 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class MySQL extends Query {
+@Deprecated
+public class MySQLOld extends QueryOld {
     public ResultSet execute(Connection connection) throws SQLException {
         validateQuery();
 
