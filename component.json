@@ -1,5 +1,5 @@
 {
-    "title": "Database",
+    "title": "Database (Deprecated)",
     "description": "Database connector",
     "credentials": {
         "verifier" : "io.elastic.jdbc.JdbcCredentialsVerifier",
@@ -50,7 +50,7 @@
     },
     "triggers": {
         "select": {
-            "main": "io.elastic.jdbc.SelectTrigger",
+            "main": "io.elastic.jdbc.triggers.SelectTrigger",
             "title": "SELECT",
             "type": "polling",
             "fields": {

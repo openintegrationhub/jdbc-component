@@ -5,6 +5,7 @@ import io.elastic.api.EventEmitter
 import io.elastic.api.EventEmitter.Callback
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
+import io.elastic.jdbc.triggers.SelectTrigger
 import spock.lang.Ignore
 import spock.lang.Specification
 

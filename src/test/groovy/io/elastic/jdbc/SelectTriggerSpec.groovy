@@ -3,6 +3,7 @@ package io.elastic.jdbc
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
+import io.elastic.jdbc.triggers.SelectTrigger
 import spock.lang.Specification
 import com.google.gson.JsonObject
 

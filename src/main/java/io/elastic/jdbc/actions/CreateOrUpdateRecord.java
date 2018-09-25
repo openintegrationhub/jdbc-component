@@ -17,6 +17,7 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
+@Deprecated
 public class CreateOrUpdateRecord implements Module {
     private static final Logger logger = LoggerFactory.getLogger(CreateOrUpdateRecord.class);
 
