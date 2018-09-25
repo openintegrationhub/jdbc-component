@@ -105,7 +105,8 @@
     },
     "select": {
       "main": "io.elastic.jdbc.triggers.SelectTriggerOld",
-      "title": "SELECT",
+      "title": "SELECT (Deprecated)",
+      "description": "This trigger is already deprecated. Please use 'Select' trigger",
       "type": "polling",
       "fields": {
         "tableName": {
@@ -132,7 +133,7 @@
   "actions": {
     "createOrUpdateRecord": {
       "main": "io.elastic.jdbc.actions.CreateOrUpdateRecord",
-      "title": "Create or update record",
+      "title": "Create or update record (Deprecated)",
       "fields": {
         "tableName": {
           "viewClass": "SelectView",
