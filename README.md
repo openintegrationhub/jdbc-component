@@ -4,17 +4,17 @@ This is an open source component for working with object-relational database man
 ### Purpose
 With this component you will have following triggers:
 
-``SELECT`` - this trigger will execute an [SQL](https://en.wikipedia.org/wiki/SQL "SQL") queryOld that returns multiple results, it has limitations on the queryOld and suited only for SELECT type of queries. The trigger will remember last execution timestamp and let you build queries on it.
+``SELECT`` - this trigger will execute an [SQL](https://en.wikipedia.org/wiki/SQL "SQL") query that returns multiple results, it has limitations on the query and suited only for SELECT type of queries. The trigger will remember last execution timestamp and let you build queries on it.
 
-``GET ROWS POLLING`` - this trigger will execute select queryOld from specified table with simple criteria of selected datetime or timestamp table. The trigger will remember last execution timestamp and let you build queries on it.
+``GET ROWS POLLING`` - this trigger will execute select query from specified table with simple criteria of selected datetime or timestamp table. The trigger will remember last execution timestamp and let you build queries on it.
 
 Following actions are inside:
 
-``SELECT`` - this action will execute an [SQL](https://en.wikipedia.org/wiki/SQL "SQL") queryOld that returns multiple results, it has limitations on the queryOld and suited only for SELECT type of queries.
+``SELECT`` - this action will execute an [SQL](https://en.wikipedia.org/wiki/SQL "SQL") query that returns multiple results, it has limitations on the query and suited only for SELECT type of queries.
 
-``LOOKUP BY PRIMARY KEY`` - this action will execute select queryOld from specified table, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns only one result (a primary key is unique). 
+``LOOKUP BY PRIMARY KEY`` - this action will execute select query from specified table, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns only one result (a primary key is unique). 
 
-``DELETE BY PRIMARY KEY`` - this action will execute delete queryOld from specified table, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns an integer value that indicates the number of rows affected, the returned value can be 0 or 1 (a primary key is unique).
+``DELETE BY PRIMARY KEY`` - this action will execute delete query from specified table, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns an integer value that indicates the number of rows affected, the returned value can be 0 or 1 (a primary key is unique).
 ### How works
 
 ### Requirements
