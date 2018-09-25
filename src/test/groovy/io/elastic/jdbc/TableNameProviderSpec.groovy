@@ -48,7 +48,7 @@ class TableNameProviderSpec extends Specification {
 
         TableNameProvider provider = new TableNameProvider();
 
-        JsonObject model = provider.getSelectModel(config);
+        JsonObject model = SailorVersionsAdapter.javaxToGson(provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config)));
 
         expect: model.toString() == '{"PUBLIC.ORDERS":"PUBLIC.ORDERS","PUBLIC.PRODUCTS":"PUBLIC.PRODUCTS","PUBLIC.USERS":"PUBLIC.USERS"}'
     }
@@ -58,7 +58,7 @@ class TableNameProviderSpec extends Specification {
 
         TableNameProvider provider = new TableNameProvider();
 
-        JsonObject model = provider.getSelectModel(config);
+        JsonObject model = SailorVersionsAdapter.javaxToGson(provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config)));
 
         expect: model.toString() == '{"":"no tables"}'
     }

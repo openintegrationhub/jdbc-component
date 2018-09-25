@@ -3,31 +3,26 @@ package io.elastic.jdbc;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.elastic.api.Component;
-import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
+import io.elastic.api.Module;
 import io.elastic.jdbc.QueryBuilders.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 
-public class SelectTrigger extends Component {
+public class SelectTrigger implements Module {
     private static final Logger logger = LoggerFactory.getLogger(SelectTrigger.class);
     public static final String PROPERTY_TABLE_NAME = "tableName";
     public static final String PROPERTY_ORDER_FIELD = "orderField";
-
-    public SelectTrigger(EventEmitter eventEmitter) {
-        super(eventEmitter);
-    }
 
     @Override
     public final void execute(ExecutionParameters parameters) {
 
         logger.info("About to execute select action");
         JsonArray rows = new JsonArray();
-        JsonObject config = parameters.getConfiguration();
+        JsonObject config = SailorVersionsAdapter.javaxToGson(parameters.getConfiguration());
         Connection connection = Utils.getConnection(config);
         checkConfig(config);
 
@@ -35,7 +30,7 @@ public class SelectTrigger extends Component {
         String tableName = config.get(PROPERTY_TABLE_NAME).getAsString();
         String orderField = config.get("orderField").getAsString();
 
-        JsonObject snapshot = parameters.getSnapshot();
+        JsonObject snapshot = SailorVersionsAdapter.javaxToGson(parameters.getSnapshot());
         Integer skipNumber = 0;
         if (snapshot.get("skipNumber") != null)
             skipNumber = snapshot.get("skipNumber").getAsInt();
@@ -53,7 +48,7 @@ public class SelectTrigger extends Component {
             ResultSetMetaData metaData = rs.getMetaData();
             while (rs.next()) {
                 JsonObject row = new JsonObject();
-                for(int i = 1; i <= metaData.getColumnCount(); i ++) {
+                for (int i = 1; i <= metaData.getColumnCount(); i++) {
                     String rsString = rs.getString(metaData.getColumnName(i));
                     if (metaData.getColumnType(i) == Types.TIMESTAMP) {
                         rsString = rs.getTimestamp(metaData.getColumnName(i)).toString();
@@ -67,12 +62,12 @@ public class SelectTrigger extends Component {
                 rows.add(row);
                 logger.info("Emitting data");
                 logger.info(row.toString());
-                this.getEventEmitter().emitData(new Message.Builder().body(row).build());
+                parameters.getEventEmitter().emitData(new Message.Builder().body(SailorVersionsAdapter.gsonToJavax(row)).build());
             }
             snapshot.addProperty("skipNumber", skipNumber + rows.size());
             snapshot.addProperty(PROPERTY_TABLE_NAME, tableName);
             logger.info("Emitting new snapshot {}", snapshot.toString());
-            this.getEventEmitter().emitSnapshot(snapshot);
+            parameters.getEventEmitter().emitSnapshot(SailorVersionsAdapter.gsonToJavax(snapshot));
         } catch (SQLException e) {
             logger.error("Failed to make request", e.toString());
             throw new RuntimeException(e);

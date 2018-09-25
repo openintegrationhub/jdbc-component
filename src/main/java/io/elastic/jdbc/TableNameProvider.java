@@ -16,7 +16,7 @@ public class TableNameProvider implements SelectModelProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(TableNameProvider.class);
 
-    public JsonObject getSelectModel(JsonObject configuration) {
+    public javax.json.JsonObject getSelectModel(javax.json.JsonObject configuration) {
         logger.info("About to retrieve table name");
 
         JsonObject result = new JsonObject();
@@ -24,7 +24,7 @@ public class TableNameProvider implements SelectModelProvider {
         ResultSet rs = null;
 
         try {
-            connection = Utils.getConnection(configuration);
+            connection = Utils.getConnection(SailorVersionsAdapter.javaxToGson(configuration));
             logger.info("Successfully connected to DB");
 
             // get metadata
@@ -42,7 +42,7 @@ public class TableNameProvider implements SelectModelProvider {
             while (rs.next()) {
                 tableName = rs.getString("TABLE_NAME");
                 schemaName = rs.getString("TABLE_SCHEM");
-                if (configuration.get("dbEngine").getAsString().toLowerCase().equals("oracle")
+                if (SailorVersionsAdapter.javaxToGson(configuration).get("dbEngine").getAsString().toLowerCase().equals("oracle")
                         && isOracleServiceSchema(schemaName)) {
                     continue;
                 }
@@ -74,7 +74,7 @@ public class TableNameProvider implements SelectModelProvider {
                 }
             }
         }
-        return result;
+        return SailorVersionsAdapter.gsonToJavax(result);
     }
 
     private boolean isOracleServiceSchema(String schema) {

@@ -13,45 +13,47 @@ import java.util.Map;
 public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModelProvider {
     private static final Logger logger = LoggerFactory.getLogger(ColumnNamesProvider.class);
 
-    public JsonObject getSelectModel(JsonObject configuration) {
+    public javax.json.JsonObject getSelectModel(javax.json.JsonObject configuration) {
         JsonObject result = new JsonObject();
-        JsonObject properties = getColumns(configuration);
-        for (Map.Entry<String,JsonElement> entry : properties.entrySet()) {
+        JsonObject properties = SailorVersionsAdapter.javaxToGson(getColumns(configuration));
+        for (Map.Entry<String, JsonElement> entry : properties.entrySet()) {
             JsonObject field = entry.getValue().getAsJsonObject();
             result.addProperty(entry.getKey(), field.get("title").getAsString());
         }
-        return result;
+        return SailorVersionsAdapter.gsonToJavax(result);
     }
 
     /**
      * Returns Columns list as metadata
+     *
      * @param configuration
      * @return
      */
 
-    public JsonObject getMetaModel(JsonObject configuration) {
+    public javax.json.JsonObject getMetaModel(javax.json.JsonObject configuration) {
         JsonObject result = new JsonObject();
         JsonObject inMetadata = new JsonObject();
-        JsonObject properties = getColumns(configuration);
+        JsonObject properties = SailorVersionsAdapter.javaxToGson(getColumns(configuration));
         inMetadata.addProperty("type", "object");
         inMetadata.add("properties", properties);
         result.add("out", inMetadata);
         result.add("in", inMetadata);
-        return result;
+        return SailorVersionsAdapter.gsonToJavax(result);
     }
 
-    public JsonObject getColumns(JsonObject configuration) {
-        if (configuration.get("tableName") == null || configuration.get("tableName").getAsString().isEmpty()) {
+    public javax.json.JsonObject getColumns(javax.json.JsonObject configuration) {
+        if (SailorVersionsAdapter.javaxToGson(configuration).get("tableName") == null ||
+                SailorVersionsAdapter.javaxToGson(configuration).get("tableName").getAsString().isEmpty()) {
             throw new RuntimeException("Table name is required");
         }
-        String tableName = configuration.get("tableName").getAsString();
+        String tableName = SailorVersionsAdapter.javaxToGson(configuration).get("tableName").getAsString();
         JsonObject properties = new JsonObject();
         Connection connection = null;
         ResultSet rs = null;
         String schemaName = null;
         Boolean isEmpty = true;
         try {
-            connection = Utils.getConnection(configuration);
+            connection = Utils.getConnection(SailorVersionsAdapter.javaxToGson(configuration));
             DatabaseMetaData dbMetaData = connection.getMetaData();
             if (tableName.contains(".")) {
                 schemaName = tableName.split("\\.")[0];
@@ -89,15 +91,15 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
                 }
             }
         }
-        return properties;
+        return SailorVersionsAdapter.gsonToJavax(properties);
     }
 
     /**
      * Converts JDBC column type name to js type according to http://db.apache.org/ojb/docu/guides/jdbc-types.html
      *
      * @param sqlType JDBC column type
-     * @url http://db.apache.org/ojb/docu/guides/jdbc-types.html
      * @return
+     * @url http://db.apache.org/ojb/docu/guides/jdbc-types.html
      */
     private String convertType(Integer sqlType) {
         if (sqlType == Types.NUMERIC || sqlType == Types.DECIMAL || sqlType == Types.TINYINT

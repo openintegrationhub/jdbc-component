@@ -16,7 +16,7 @@ class JdbcCredentialsVerifierSpec extends Specification {
         config.addProperty("databaseName", "mem:tests")
 
         when:
-        new JdbcCredentialsVerifier().verify(config)
+        new JdbcCredentialsVerifier().verify(SailorVersionsAdapter.gsonToJavax(config))
 
         then:
         notThrown(Throwable.class)
@@ -32,7 +32,7 @@ class JdbcCredentialsVerifierSpec extends Specification {
         config.addProperty("databaseName", "testdb")
 
         when:
-        new JdbcCredentialsVerifier().verify(config)
+        new JdbcCredentialsVerifier().verify(SailorVersionsAdapter.gsonToJavax(config))
 
         then:
         def e = thrown(InvalidCredentialsException.class)

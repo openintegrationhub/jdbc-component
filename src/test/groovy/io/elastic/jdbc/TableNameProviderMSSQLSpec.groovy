@@ -51,7 +51,7 @@ class TableNameProviderMSSQLSpec extends Specification {
         TableNameProvider provider = new TableNameProvider();
 
         when:
-        JsonObject model = provider.getSelectModel(config);
+        JsonObject model = provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config));
 
         then:
         print model

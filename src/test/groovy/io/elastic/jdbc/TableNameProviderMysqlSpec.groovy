@@ -50,7 +50,7 @@ class TableNameProviderMysqlSpec extends Specification {
 
         TableNameProvider provider = new TableNameProvider();
 
-        JsonObject model = provider.getSelectModel(config);
+        JsonObject model = SailorVersionsAdapter.javaxToGson(provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config)));
 
         expect: model.toString().contains('"orders":"orders","products":"products"')
     }

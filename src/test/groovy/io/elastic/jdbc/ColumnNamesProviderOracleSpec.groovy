@@ -41,7 +41,7 @@ class ColumnNamesProviderOracleSpec extends Specification {
         config.addProperty("databaseName", "ORCL")
         config.addProperty("tableName", "ELASTICIO.STARS")
         ColumnNamesProvider provider = new ColumnNamesProvider()
-        JsonObject meta = provider.getMetaModel((config));
+        JsonObject meta = SailorVersionsAdapter.javaxToGson(provider.getMetaModel(SailorVersionsAdapter.gsonToJavax(config)));
         print meta
         expect: meta.toString() == "{\"out\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}},\"in\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}}}"
     }

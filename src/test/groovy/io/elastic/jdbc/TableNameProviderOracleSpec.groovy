@@ -52,7 +52,7 @@ class TableNameProviderOracleSpec extends Specification {
         TableNameProvider provider = new TableNameProvider();
 
         when:
-        JsonObject model = provider.getSelectModel(config);
+        JsonObject model = SailorVersionsAdapter.javaxToGson(provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config)));
 
         then:
 

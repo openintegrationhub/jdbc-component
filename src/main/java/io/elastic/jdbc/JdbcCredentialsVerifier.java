@@ -1,11 +1,11 @@
 package io.elastic.jdbc;
 
-import com.google.gson.JsonObject;
 import io.elastic.api.CredentialsVerifier;
 import io.elastic.api.InvalidCredentialsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.JsonObject;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -21,7 +21,7 @@ public class JdbcCredentialsVerifier implements CredentialsVerifier {
         Connection connection = null;
 
         try {
-            connection = Utils.getConnection(configuration);
+            connection = Utils.getConnection(SailorVersionsAdapter.javaxToGson(configuration));
             logger.info("Successfully connected to database. Credentials verified.");
         } catch (Exception e) {
             throw new InvalidCredentialsException("Failed to connect to database", e);

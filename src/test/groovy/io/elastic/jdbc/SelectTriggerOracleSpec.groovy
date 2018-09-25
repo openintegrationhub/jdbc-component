@@ -50,14 +50,16 @@ class SelectTriggerOracleSpec extends Specification {
         Callback snapshotCallback = Mock(Callback)
         Callback dataCallback = Mock(Callback)
         Callback onreboundCallback = Mock(Callback)
+        Callback httpReplyCallback = Mock(Callback)
 
         EventEmitter emitter = new EventEmitter.Builder()
                 .onData(dataCallback)
                 .onSnapshot(snapshotCallback)
                 .onError(errorCallback)
-                .onRebound(onreboundCallback).build();
+                .onRebound(onreboundCallback)
+                .onHttpReplyCallback(httpReplyCallback).build();
 
-        SelectTrigger selectAction = new SelectTrigger(emitter);
+        SelectTrigger selectAction = new SelectTrigger();
 
         given:
         Message msg = new Message.Builder().build();
@@ -75,7 +77,8 @@ class SelectTriggerOracleSpec extends Specification {
         snapshot.addProperty("skipNumber", 0)
 
         when:
-        ExecutionParameters params = new ExecutionParameters(msg, config, snapshot)
+        ExecutionParameters params = new ExecutionParameters(msg, emitter,
+                SailorVersionsAdapter.gsonToJavax(config), SailorVersionsAdapter.gsonToJavax(snapshot))
         selectAction.execute(params)
 
         then:

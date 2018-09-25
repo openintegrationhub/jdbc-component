@@ -1,11 +1,13 @@
 package io.elastic.jdbc
 import com.google.gson.JsonObject
+import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 
 import java.sql.Connection
 import java.sql.DriverManager
 
+@Ignore
 class TableNameProviderPostgresqlSpec extends Specification {
 
     @Shared def connectionString = ""
@@ -45,7 +47,8 @@ class TableNameProviderPostgresqlSpec extends Specification {
 
         TableNameProvider provider = new TableNameProvider();
 
-        JsonObject model = provider.getSelectModel(config);
+        JsonObject model = SailorVersionsAdapter.javaxToGson(provider.getSelectModel(SailorVersionsAdapter.gsonToJavax(config)));
+
         expect: model.toString() == '{"public.decimals":"public.decimals","public.orders":"public.orders","public.products":"public.products","public.tetstable":"public.tetstable","public.users":"public.users","public.pg_stat_statements":"public.pg_stat_statements"}'
     }
 }

@@ -32,7 +32,7 @@ class ColumnNamesProviderSpec extends Specification {
         config.addProperty("databaseName", "tests")
         ColumnNamesProvider provider = new ColumnNamesProvider()
 
-        expect: provider.getMetaModel((config)).toString() == "{\"out\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"ISDEAD\":{\"required\":false,\"title\":\"ISDEAD\",\"type\":\"boolean\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}},\"in\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"ISDEAD\":{\"required\":false,\"title\":\"ISDEAD\",\"type\":\"boolean\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}}}"
+        expect: provider.getMetaModel((SailorVersionsAdapter.gsonToJavax(config))).toString() == "{\"out\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"ISDEAD\":{\"required\":false,\"title\":\"ISDEAD\",\"type\":\"boolean\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}},\"in\":{\"type\":\"object\",\"properties\":{\"ID\":{\"required\":false,\"title\":\"ID\",\"type\":\"number\"},\"ISDEAD\":{\"required\":false,\"title\":\"ISDEAD\",\"type\":\"boolean\"},\"NAME\":{\"required\":true,\"title\":\"NAME\",\"type\":\"string\"},\"RADIUS\":{\"required\":false,\"title\":\"RADIUS\",\"type\":\"number\"},\"DESTINATION\":{\"required\":false,\"title\":\"DESTINATION\",\"type\":\"number\"}}}}"
     }
 
     def "should throw the exception when tableName is not set" () {
@@ -42,7 +42,7 @@ class ColumnNamesProviderSpec extends Specification {
         config.addProperty("password", " ")
         when:
         ColumnNamesProvider provider = new ColumnNamesProvider()
-        provider.getColumns(config)
+        provider.getColumns(SailorVersionsAdapter.gsonToJavax(config))
         then:
         def e = thrown(RuntimeException)
         e.message ==  "Table name is required"

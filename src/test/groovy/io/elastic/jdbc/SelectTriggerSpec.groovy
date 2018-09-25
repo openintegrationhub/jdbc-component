@@ -42,14 +42,16 @@ class SelectTriggerSpec extends Specification {
         Callback snapshotCallback = Mock(Callback)
         Callback dataCallback = Mock(Callback)
         Callback onreboundCallback = Mock(Callback)
+        Callback httpReplyCallback = Mock(Callback)
 
         EventEmitter emitter = new EventEmitter.Builder()
                 .onData(dataCallback)
                 .onSnapshot(snapshotCallback)
                 .onError(errorCallback)
-                .onRebound(onreboundCallback).build();
+                .onRebound(onreboundCallback)
+                .onHttpReplyCallback(httpReplyCallback).build();
 
-        SelectTrigger selectAction = new SelectTrigger(emitter);
+        SelectTrigger selectAction = new SelectTrigger();
 
         given:
         Message msg = new Message.Builder().build();
@@ -67,13 +69,14 @@ class SelectTriggerSpec extends Specification {
         snapshot.addProperty("skipNumber", 0)
 
         when:
-        ExecutionParameters params = new ExecutionParameters(msg, config, snapshot)
+        ExecutionParameters params = new ExecutionParameters(msg, emitter,
+                SailorVersionsAdapter.gsonToJavax(config), SailorVersionsAdapter.gsonToJavax(snapshot))
         selectAction.execute(params)
 
         then:
         0 * errorCallback.receive(_)
-        1 * dataCallback.receive({ it.toString() =='{"body":{"ID":"1","ISDEAD":"FALSE","NAME":"Sun","RADIUS":"50","DESTINATION":"170.0E0"},"attachments":{}}' })
-        1 * dataCallback.receive({ it.toString() =='{"body":{"ID":"2","ISDEAD":"FALSE","NAME":"Shit","RADIUS":"90","DESTINATION":"90000.0E0"},"attachments":{}}' })
+        1 * dataCallback.receive({ it.body.toString() =='{"ID":"1","ISDEAD":"FALSE","NAME":"Sun","RADIUS":"50","DESTINATION":"170.0E0"}' })
+        1 * dataCallback.receive({ it.body.toString() =='{"ID":"2","ISDEAD":"FALSE","NAME":"Shit","RADIUS":"90","DESTINATION":"90000.0E0"}' })
         1 * snapshotCallback.receive({ it.toString() == '{"skipNumber":2,"tableName":"stars"}'})
     }
     def "reset a snapshot when table was changed" () {
@@ -82,14 +85,16 @@ class SelectTriggerSpec extends Specification {
         Callback snapshotCallback = Mock(Callback)
         Callback dataCallback = Mock(Callback)
         Callback onreboundCallback = Mock(Callback)
+        Callback httpReplyCallback = Mock(Callback)
 
         EventEmitter emitter = new EventEmitter.Builder()
                 .onData(dataCallback)
                 .onSnapshot(snapshotCallback)
                 .onError(errorCallback)
-                .onRebound(onreboundCallback).build();
+                .onRebound(onreboundCallback)
+                .onHttpReplyCallback(httpReplyCallback).build();
 
-        SelectTrigger selectAction = new SelectTrigger(emitter);
+        SelectTrigger selectAction = new SelectTrigger();
 
         given:
         Message msg = new Message.Builder().build();
@@ -107,7 +112,8 @@ class SelectTriggerSpec extends Specification {
         snapshot.addProperty("skipNumber", 0)
 
         when:
-        ExecutionParameters params = new ExecutionParameters(msg, config, snapshot)
+        ExecutionParameters params = new ExecutionParameters(msg, emitter,
+                SailorVersionsAdapter.gsonToJavax(config), SailorVersionsAdapter.gsonToJavax(snapshot))
         selectAction.execute(params)
 
         then:
@@ -116,7 +122,8 @@ class SelectTriggerSpec extends Specification {
         config.addProperty("tableName", "stars2")
 
         when:
-        params = new ExecutionParameters(msg, config, snapshot)
+        params = new ExecutionParameters(msg, emitter,
+                SailorVersionsAdapter.gsonToJavax(config), SailorVersionsAdapter.gsonToJavax(snapshot))
         selectAction.execute(params)
 
         then:
