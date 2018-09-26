@@ -1,6 +1,7 @@
 package io.elastic.jdbc.actions;
 
 import io.elastic.api.ExecutionParameters;
+import io.elastic.api.JSON;
 import io.elastic.api.Message;
 import io.elastic.api.Module;
 import io.elastic.jdbc.Engines;
@@ -12,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Map;
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import org.slf4j.Logger;
@@ -91,10 +93,11 @@ public class LookupRowByPrimaryKey implements Module {
             parameters.getEventEmitter().emitData(new Message.Builder().body(row).build());
           }
           if (row.size() == 0 && nullableResult) {
-            row.put("empty dataset", null);
+            JsonObjectBuilder emptyResBuilder = Json.createObjectBuilder();
+            emptyResBuilder.add("empty dataset", JsonValue.NULL);
             LOGGER.info("Emitting data");
-            LOGGER.info(row.toString());
-            parameters.getEventEmitter().emitData(new Message.Builder().body(row).build());
+            LOGGER.info(JSON.stringify(emptyResBuilder.build()));
+            parameters.getEventEmitter().emitData(new Message.Builder().body(emptyResBuilder.build()).build());
           } else if (row.size() == 0 && !nullableResult) {
             LOGGER.info("Empty response. Error message will be returned");
             throw new RuntimeException("Empty response");
