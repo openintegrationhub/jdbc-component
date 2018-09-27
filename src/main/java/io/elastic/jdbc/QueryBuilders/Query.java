@@ -132,9 +132,11 @@ public abstract class Query {
       throws SQLException {
     try (PreparedStatement stmt = connection.prepareStatement(sqlQuery)) {
       int i = 1;
-      for (Entry<String, JsonValue> entry : body.entrySet()) {
-        Utils.setStatementParam(stmt, i, entry.getKey(), body);
-        i++;
+      if (stmt.getParameterMetaData().getParameterCount() != 0) {
+        for (Entry<String, JsonValue> entry : body.entrySet()) {
+          Utils.setStatementParam(stmt, i, entry.getKey(), body);
+          i++;
+        }
       }
       try (ResultSet rs = stmt.executeQuery()) {
         JsonObjectBuilder row = Json.createObjectBuilder();
