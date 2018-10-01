@@ -1,6 +1,6 @@
 {
-  "title": "Database v2",
-  "description": "Database JDBC connector (v2)",
+  "title": "Database",
+  "description": "Database JDBC connector",
   "credentials": {
     "verifier": "io.elastic.jdbc.JdbcCredentialsVerifier",
     "fields": {
