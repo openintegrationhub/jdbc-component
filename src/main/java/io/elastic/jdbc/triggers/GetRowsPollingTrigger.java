@@ -54,7 +54,7 @@ public class GetRowsPollingTrigger implements Module {
       pollingValue = Timestamp.valueOf(configuration.getString(PROPERTY_POLLING_VALUE));
     } else if (configuration.containsKey(PROPERTY_POLLING_VALUE) && Utils
         .getNonNullString(configuration, PROPERTY_POLLING_VALUE).matches(DATETIME_REGEX)) {
-      pollingValue = Timestamp.valueOf(snapshot.getString(PROPERTY_POLLING_VALUE));
+      pollingValue = Timestamp.valueOf(configuration.getString(PROPERTY_POLLING_VALUE));
     } else {
       LOGGER.info(
           "There is an empty value for Start Polling From at the config and snapshot. So, we set Current Date = "
