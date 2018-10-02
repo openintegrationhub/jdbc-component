@@ -1,18 +1,18 @@
 package io.elastic.jdbc;
 
-import io.elastic.jdbc.QueryBuilders.MSSQL;
-import io.elastic.jdbc.QueryBuilders.MySQL;
-import io.elastic.jdbc.QueryBuilders.Oracle;
-import io.elastic.jdbc.QueryBuilders.Query;
+import io.elastic.jdbc.QueryBuilders.MSSQLOld;
+import io.elastic.jdbc.QueryBuilders.MySQLOld;
+import io.elastic.jdbc.QueryBuilders.OracleOld;
+import io.elastic.jdbc.QueryBuilders.QueryOld;
 
 public class TriggerQueryFactory {
-    public Query getQuery(String dbEngine) {
+    public QueryOld getQuery(String dbEngine) {
         if (dbEngine.toLowerCase().equals("oracle")) {
-            return new Oracle();
+            return new OracleOld();
         }
         if (dbEngine.toLowerCase().equals("mssql")) {
-            return new MSSQL();
+            return new MSSQLOld();
         }
-        return new MySQL();
+        return new MySQLOld();
     }
 }

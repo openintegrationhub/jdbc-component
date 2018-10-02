@@ -2,8 +2,10 @@ package io.elastic.jdbc
 
 import com.google.gson.JsonObject
 import io.elastic.api.InvalidCredentialsException
+import spock.lang.Ignore
 import spock.lang.Specification
 
+@Ignore
 class JdbcCredentialsVerifierSpec extends Specification {
 
     def "should verify successfully when connection succeeds"() {
@@ -16,7 +18,7 @@ class JdbcCredentialsVerifierSpec extends Specification {
         config.addProperty("databaseName", "mem:tests")
 
         when:
-        new JdbcCredentialsVerifier().verify(config)
+        new JdbcCredentialsVerifier().verify(SailorVersionsAdapter.gsonToJavax(config))
 
         then:
         notThrown(Throwable.class)
@@ -32,7 +34,7 @@ class JdbcCredentialsVerifierSpec extends Specification {
         config.addProperty("databaseName", "testdb")
 
         when:
-        new JdbcCredentialsVerifier().verify(config)
+        new JdbcCredentialsVerifier().verify(SailorVersionsAdapter.gsonToJavax(config))
 
         then:
         def e = thrown(InvalidCredentialsException.class)

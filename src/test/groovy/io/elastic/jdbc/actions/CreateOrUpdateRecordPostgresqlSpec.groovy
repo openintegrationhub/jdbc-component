@@ -9,6 +9,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 
+@Ignore
 class CreateOrUpdateRecordPostgresqlSpec extends Specification {
 
 	@Shared def connectionString = ""

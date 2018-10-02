@@ -4,6 +4,7 @@ import com.google.gson.JsonObject
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
+import io.elastic.jdbc.SailorVersionsAdapter
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -21,6 +22,7 @@ class CreateOrUpdateRecordSpec  extends Specification {
 	@Shared EventEmitter.Callback snapshotCallback
 	@Shared EventEmitter.Callback dataCallback
 	@Shared EventEmitter.Callback reboundCallback
+	@Shared EventEmitter.Callback httpReplyCallback
 	@Shared EventEmitter emitter
 	@Shared CreateOrUpdateRecord action
 
@@ -37,13 +39,14 @@ class CreateOrUpdateRecordSpec  extends Specification {
 		snapshotCallback = Mock(EventEmitter.Callback)
 		dataCallback = Mock(EventEmitter.Callback)
 		reboundCallback = Mock(EventEmitter.Callback)
-		emitter = new EventEmitter.Builder().onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback).build()
-		action = new CreateOrUpdateRecord(emitter)
+		httpReplyCallback = Mock(EventEmitter.Callback)
+		emitter = new EventEmitter.Builder().onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback).onHttpReplyCallback(httpReplyCallback).build()
+		action = new CreateOrUpdateRecord()
 	}
 
 	def runAction(JsonObject config, JsonObject body, JsonObject snapshot){
-		Message msg = new Message.Builder().body(body).build()
-		ExecutionParameters params = new ExecutionParameters(msg, config, snapshot)
+		Message msg = new Message.Builder().body(SailorVersionsAdapter.gsonToJavax(body)).build()
+		ExecutionParameters params = new ExecutionParameters(msg, emitter, SailorVersionsAdapter.gsonToJavax(config), SailorVersionsAdapter.gsonToJavax(snapshot))
 		action.execute(params);
 	}
 

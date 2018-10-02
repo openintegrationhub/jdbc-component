@@ -2,12 +2,12 @@ package io.elastic.jdbc.actions;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.elastic.api.Component;
-import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
-import io.elastic.jdbc.Engines;
-import io.elastic.jdbc.Utils;
+import io.elastic.api.Module;
+import io.elastic.jdbc.EnginesOld;
+import io.elastic.jdbc.SailorVersionsAdapter;
+import io.elastic.jdbc.UtilsOld;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,21 +16,18 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CreateOrUpdateRecord extends Component {
+@Deprecated
+public class CreateOrUpdateRecord implements Module {
     private static final Logger logger = LoggerFactory.getLogger(CreateOrUpdateRecord.class);
 
     private Connection connection = null;
     private Map<String, String> columnTypes = null;
     private boolean isOracle = false;
 
-    public CreateOrUpdateRecord(EventEmitter eventEmitter) {
-        super(eventEmitter);
-    }
-
     @Override
     public void execute(ExecutionParameters parameters) {
-        final JsonObject configuration = parameters.getConfiguration();
-        final JsonObject body = parameters.getMessage().getBody();
+        final JsonObject configuration = SailorVersionsAdapter.javaxToGson(parameters.getConfiguration());
+        final JsonObject body = SailorVersionsAdapter.javaxToGson(parameters.getMessage().getBody());
         if (!configuration.has("tableName") || configuration.get("tableName").isJsonNull() || configuration.get("tableName").getAsString().isEmpty()) {
             throw new RuntimeException("Table name is required field");
         }
@@ -44,10 +41,10 @@ public class CreateOrUpdateRecord extends Component {
             idColumnValue = body.get(idColumn).getAsString();
         }
         logger.info("ID column value: {}", idColumnValue);
-        String db = configuration.get(Utils.CFG_DB_ENGINE).getAsString();
-        isOracle = db.equals(Engines.ORACLE.name().toLowerCase());
+        String db = configuration.get(UtilsOld.CFG_DB_ENGINE).getAsString();
+        isOracle = db.equals(EnginesOld.ORACLE.name().toLowerCase());
         try {
-            connection = Utils.getConnection(configuration);
+            connection = UtilsOld.getConnection(configuration);
             columnTypes = getColumnTypes(tableName);
             logger.info("Detected column types: " + columnTypes);
             if (recordExists(tableName, idColumn, idColumnValue)) {
@@ -55,7 +52,7 @@ public class CreateOrUpdateRecord extends Component {
             } else {
                 makeInsert(tableName, body);
             }
-            this.getEventEmitter().emitData(new Message.Builder().body(body).build());
+            parameters.getEventEmitter().emitData(new Message.Builder().body(SailorVersionsAdapter.gsonToJavax(body)).build());
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
