@@ -73,7 +73,7 @@ In the Password field please provide a password of the user that has permissions
 
 Validation will start right after click on a Save button. You will be able to continue working with component after validation if all provided credentials will be valid.
 ## Triggers
-### SELECT
+### Select trigger
 You are able to provide SELECT query with last execution timestamp as WHERE clause criteria.
 ![image](https://user-images.githubusercontent.com/40201204/43591075-2a032dcc-967b-11e8-968d-851355c2646e.png)
 Before executing the the statement %%EIO_LAST_POLL%% will be replaced with ISO Date of the last execution or max value of the last pooled datetime, for example ``2018-08-01T00:00:00.000``.
@@ -87,7 +87,7 @@ The format of ``Start Polling From (optional)`` field should be like ``yyyy-mm-d
 - ``mi`` - minute
 - ``ss`` - second
 - ``sss`` - millisecond (optional)
-### GET ROWS POLLING
+### Get Rows Polling trigger
 This trigger can polling data from provided table. As WHERE clause you can use column, which has datatype like DATE or TIMESTAMP.
 ![image](https://user-images.githubusercontent.com/40201204/43591332-c99f6b3e-967b-11e8-8a77-bf8386e83d51.png)
 Before executing the the statement %%EIO_LAST_POLL%% will be replaced with ISO Date of the last execution or max value of the last pooled datetime, for example ``2018-08-01T00:00:00.000``.
@@ -101,8 +101,13 @@ The format of ``Start Polling From (optional)`` field should be like ``yyyy-mm-d
 - ``mi`` - minute
 - ``ss`` - second
 - ``sss`` - millisecond (optional)
+
+### SELECT trigger (Deprecated)
+This action exists in JDBC component only for backward compatibility. New [**Select trigger**](#select-trigger) is recommended to use.
+
+
 ## Actions
-### SELECT
+### Select action
 ![image](https://user-images.githubusercontent.com/40201204/43592439-39ec5738-967e-11e8-8632-3655b08982d3.png)
 The action will execute an [SQL](https://en.wikipedia.org/wiki/SQL "SQL") query that can return multiple results, it has limitations on the query and suited only for SELECT type of queries.
 In SQL query you can use clause variables with specific data types. 
@@ -141,7 +146,7 @@ Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty respon
 #### Input fields description
 Component supports dynamic incoming metadata - as soon as your query is in place it will be parsed and incoming metadata will be generated accordingly.
 
-### LOOKUP BY PRIMARY KEY
+### Lookup Row By Primary Key
 ![image](https://user-images.githubusercontent.com/40201204/43592505-5b6bbfe8-967e-11e8-845e-2ce8ac707357.png)
 
 The action will execute select query from a ``Table`` dropdown field, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns only one result (a primary key is unique).
@@ -150,7 +155,7 @@ Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty respon
 ![image](https://user-images.githubusercontent.com/40201204/43644579-f593d1c8-9737-11e8-9b97-ee9e575a19f7.png)
 As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
 
-### UPSERT BY PRIMARY KEY
+### Upsert Row By Primary Key action
 The action will execute ``SELECT`` command from a ``Tables`` dropdown field, as search criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"), and execute ``INSERT`` command by PRIMARY KEY with specified field, if result does not found, else - action will execute ``UPDATE`` command by PRIMARY KEY with specified field. The action returns only one result row (a primary key is unique).
 1. Find and select jdbc-component in the component repository
 ![image](https://user-images.githubusercontent.com/16806832/44981615-c70a9d80-af7b-11e8-8055-3b553abe8212.png)
@@ -183,13 +188,16 @@ The action will execute ``SELECT`` command from a ``Tables`` dropdown field, as 
 As an input metadata you will get all fields of selected table. [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY") is required field (will mark as asterisk) and other input fields are optional.
 ![image](https://user-images.githubusercontent.com/16806832/44397461-1a76f780-a549-11e8-8247-9a6f9aa3f3b4.png)
 
-### DELETE BY PRIMARY KEY
+### Delete Row By Primary Key action
 ![image](https://user-images.githubusercontent.com/40201204/43592505-5b6bbfe8-967e-11e8-845e-2ce8ac707357.png)
 The action will execute delete query from a ``Table`` dropdown field, as criteria can be used only [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY"). The action returns count of affected rows.
 Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty response, otherwise you will get an error on empty response.
 #### Input fields description
 ![image](https://user-images.githubusercontent.com/40201204/43644579-f593d1c8-9737-11e8-9b97-ee9e575a19f7.png)
 As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
+
+### Create or update record action (Deprecated)
+This action exists in JDBC component only for backward compatibility. [**Upsert row by primary key**](#upsert-row-by-primary-key-action) Action is recommended to use.
 
 ## Current limitations
 1. Only tables with one [PRIMARY KEY](https://en.wikipedia.org/wiki/Primary_key "PRIMARY KEY") is supported. You will see the message ``Table has not Primary Key. Should be one Primary Key
