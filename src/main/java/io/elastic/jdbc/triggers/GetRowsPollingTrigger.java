@@ -33,6 +33,7 @@ public class GetRowsPollingTrigger implements Module {
     LOGGER.info("About to execute select trigger");
     final JsonObject configuration = parameters.getConfiguration();
     JsonObject snapshot = parameters.getSnapshot();
+    LOGGER.info("Got snapshot: {}", snapshot.toString());
     checkConfig(configuration);
     String pollingField = "";
     Calendar cDate = Calendar.getInstance();
