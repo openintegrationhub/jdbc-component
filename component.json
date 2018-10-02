@@ -131,30 +131,7 @@
     }
   },
   "actions": {
-    "createOrUpdateRecord": {
-      "main": "io.elastic.jdbc.actions.CreateOrUpdateRecord",
-      "title": "Create or update record (Deprecated)",
-      "fields": {
-        "tableName": {
-          "viewClass": "SelectView",
-          "prompt": "Select a Table",
-          "label": "Tables",
-          "required": true,
-          "model": "io.elastic.jdbc.TableNameProviderOld"
-        },
-        "idColumn": {
-          "viewClass": "SelectView",
-          "prompt": "Select an ID column",
-          "label": "ID Column",
-          "model": "io.elastic.jdbc.ColumnNamesProviderOld",
-          "required": true,
-          "require": [
-            "tableName"
-          ]
-        }
-      },
-      "dynamicMetadata": "io.elastic.jdbc.ColumnNamesProviderOld"
-    },
+
     "lookupRowByPrimaryKey": {
       "main": "io.elastic.jdbc.actions.LookupRowByPrimaryKey",
       "title": "Lookup Row By Primary Key",
@@ -226,6 +203,30 @@
         }
       },
       "dynamicMetadata": "io.elastic.jdbc.QueryColumnNamesProvider"
+    },
+    "createOrUpdateRecord": {
+      "main": "io.elastic.jdbc.actions.CreateOrUpdateRecord",
+      "title": "Create or update record (Deprecated)",
+      "fields": {
+        "tableName": {
+          "viewClass": "SelectView",
+          "prompt": "Select a Table",
+          "label": "Tables",
+          "required": true,
+          "model": "io.elastic.jdbc.TableNameProviderOld"
+        },
+        "idColumn": {
+          "viewClass": "SelectView",
+          "prompt": "Select an ID column",
+          "label": "ID Column",
+          "model": "io.elastic.jdbc.ColumnNamesProviderOld",
+          "required": true,
+          "require": [
+            "tableName"
+          ]
+        }
+      },
+      "dynamicMetadata": "io.elastic.jdbc.ColumnNamesProviderOld"
     }
   }
 }
