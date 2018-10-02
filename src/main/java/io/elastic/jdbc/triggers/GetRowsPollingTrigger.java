@@ -49,11 +49,11 @@ public class GetRowsPollingTrigger implements Module {
     Timestamp cts = new java.sql.Timestamp(cDate.getTimeInMillis());
     String formattedDate = new SimpleDateFormat(PROPERTY_DATETIME_FORMAT).format(cts);
 
-    if (configuration.containsKey(PROPERTY_POLLING_VALUE) && Utils
-        .getNonNullString(configuration, PROPERTY_POLLING_VALUE).matches(DATETIME_REGEX)) {
-      pollingValue = Timestamp.valueOf(configuration.getString(PROPERTY_POLLING_VALUE));
-    } else if (snapshot.containsKey(PROPERTY_POLLING_VALUE) && Utils
+    if (snapshot.containsKey(PROPERTY_POLLING_VALUE) && Utils
         .getNonNullString(snapshot, PROPERTY_POLLING_VALUE).matches(DATETIME_REGEX)) {
+      pollingValue = Timestamp.valueOf(configuration.getString(PROPERTY_POLLING_VALUE));
+    } else if (configuration.containsKey(PROPERTY_POLLING_VALUE) && Utils
+        .getNonNullString(configuration, PROPERTY_POLLING_VALUE).matches(DATETIME_REGEX)) {
       pollingValue = Timestamp.valueOf(snapshot.getString(PROPERTY_POLLING_VALUE));
     } else {
       LOGGER.info(
