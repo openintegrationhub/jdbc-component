@@ -14,8 +14,11 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class Query {
+  private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);
 
   protected Integer skipNumber = 0;
   protected Integer countNumber = 5000;
@@ -276,6 +279,7 @@ public abstract class Query {
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setTimestamp(1, pollingValue);
       stmt.setInt(2, countNumber);
+      LOGGER.info("SQL statement: {} with params: {}, {}", sql, pollingValue, countNumber);
       try (ResultSet rs = stmt.executeQuery()) {
         ArrayList listResult = new ArrayList();
         JsonObjectBuilder row = Json.createObjectBuilder();
