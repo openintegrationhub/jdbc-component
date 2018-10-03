@@ -4,10 +4,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.elastic.api.DynamicMetadataProvider;
 import io.elastic.api.SelectModelProvider;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
 import java.util.Map;
 
 @Deprecated

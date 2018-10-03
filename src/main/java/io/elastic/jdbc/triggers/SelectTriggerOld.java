@@ -10,10 +10,13 @@ import io.elastic.jdbc.QueryBuilders.QueryOld;
 import io.elastic.jdbc.SailorVersionsAdapter;
 import io.elastic.jdbc.TriggerQueryFactory;
 import io.elastic.jdbc.UtilsOld;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.sql.*;
 
 @Deprecated
 public class SelectTriggerOld implements Module {
