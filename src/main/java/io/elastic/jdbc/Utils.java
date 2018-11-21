@@ -100,31 +100,31 @@ public class Utils {
       JsonObject body) throws SQLException {
     try {
       if (isNumeric(colName)) {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setBigDecimal(paramNumber, body.getJsonNumber(colName).bigDecimalValue());
         } else {
           statement.setBigDecimal(paramNumber, null);
         }
       } else if (isTimestamp(colName)) {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setTimestamp(paramNumber, Timestamp.valueOf(body.getString(colName)));
         } else {
           statement.setTimestamp(paramNumber, null);
         }
       } else if (isDate(colName)) {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setDate(paramNumber, Date.valueOf(body.getString(colName)));
         } else {
           statement.setDate(paramNumber, null);
         }
       } else if (isBoolean(colName)) {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setBoolean(paramNumber, body.getBoolean(colName));
         } else {
           statement.setBoolean(paramNumber, false);
         }
       } else {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setString(paramNumber, body.getString(colName));
         } else {
           statement.setNull(paramNumber, Types.VARCHAR);
