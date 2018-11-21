@@ -1,0 +1,10 @@
+*.idea
+/target
+*.iml
+/build
+/classes
+*.gradle
+out/
+tests.log
+tests.properties
+tests.script
