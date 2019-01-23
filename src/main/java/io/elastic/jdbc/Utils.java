@@ -51,6 +51,7 @@ public class Utils {
     try {
       return DriverManager.getConnection(connectionString, user, password);
     } catch (Exception e) {
+      LOGGER.info("Failed while connecting");
       throw new RuntimeException(e);
     }
   }
