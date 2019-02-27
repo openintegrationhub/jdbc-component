@@ -1,5 +1,5 @@
 {
-  "title": "Database MySQL issue",
+  "title": "Database MySQL",
   "description": "Database JDBC connector",
   "credentials": {
     "verifier": "io.elastic.jdbc.JdbcCredentialsVerifier",
