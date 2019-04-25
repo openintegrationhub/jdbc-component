@@ -57,9 +57,11 @@ public class ColumnNamesWithPrimaryKeyProvider implements DynamicMetadataProvide
     Connection connection = null;
     ResultSet rs = null;
     ResultSet rsPrimaryKeys = null;
+    String catalog = null;
     String schemaName = null;
     boolean isEmpty = true;
     Boolean isOracle = configuration.getString("dbEngine").equals("oracle");
+    Boolean isMysql = configuration.getString("dbEngine").equals("mysql");
     try {
       connection = Utils.getConnection(configuration);
       DatabaseMetaData dbMetaData = connection.getMetaData();
@@ -67,8 +69,11 @@ public class ColumnNamesWithPrimaryKeyProvider implements DynamicMetadataProvide
         schemaName = tableName.split("\\.")[0];
         tableName = tableName.split("\\.")[1];
       }
+      if (isMysql) {
+        catalog = configuration.getString("databaseName");
+      }
       rsPrimaryKeys = dbMetaData
-          .getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
+          .getPrimaryKeys(catalog, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
               tableName);
       rs = dbMetaData.getColumns(null, schemaName, tableName, "%");
       while (rs.next()) {

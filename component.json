@@ -1,5 +1,5 @@
 {
-  "title": "Database MySQL",
+  "title": "Database",
   "description": "Database JDBC connector",
   "credentials": {
     "verifier": "io.elastic.jdbc.JdbcCredentialsVerifier",
@@ -105,8 +105,9 @@
     },
     "select": {
       "main": "io.elastic.jdbc.triggers.SelectTriggerOld",
-      "title": "SELECT (Deprecated)",
-      "description": "This trigger is already deprecated. Please use 'Select' trigger",
+      "title": "SELECT",
+      "deprecated": true,
+      "description": "DEPRECATED: Please use 'Select' Trigger",
       "type": "polling",
       "fields": {
         "tableName": {
@@ -206,7 +207,9 @@
     },
     "createOrUpdateRecord": {
       "main": "io.elastic.jdbc.actions.CreateOrUpdateRecord",
-      "title": "Create or update record (Deprecated)",
+      "title": "Create or update record",
+      "deprecated": true,
+      "description": "DEPRECATED: Please use 'Upsert Row By Primary Key' Action",
       "fields": {
         "tableName": {
           "viewClass": "SelectView",

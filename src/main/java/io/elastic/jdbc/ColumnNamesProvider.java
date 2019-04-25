@@ -55,14 +55,18 @@ public class ColumnNamesProvider implements DynamicMetadataProvider, SelectModel
     JsonObjectBuilder properties = Json.createObjectBuilder();
     Connection connection = null;
     ResultSet rs = null;
+    String catalog = null;
     String schemaName = null;
     boolean isEmpty = true;
-    Boolean isOracle = configuration.getString("dbEngine").equals("oracle");
     Boolean isMssql = configuration.getString("dbEngine").equals("mssql");
+    Boolean isMysql = configuration.getString("dbEngine").equals("mysql");
     try {
       connection = Utils.getConnection(configuration);
       DatabaseMetaData dbMetaData = connection.getMetaData();
-      rs = dbMetaData.getPrimaryKeys(null, null, tableName);
+      if (isMysql) {
+        catalog = configuration.getString("databaseName");
+      }
+      rs = dbMetaData.getPrimaryKeys(catalog, null, tableName);
       if (tableName.contains(".")) {
         schemaName = tableName.split("\\.")[0];
         tableName = tableName.split("\\.")[1];
