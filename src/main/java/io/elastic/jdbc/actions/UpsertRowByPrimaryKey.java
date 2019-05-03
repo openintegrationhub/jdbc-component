@@ -30,6 +30,7 @@ public class UpsertRowByPrimaryKey implements Module {
     JsonObject resultRow;
     String tableName;
     String dbEngine;
+    String catalog = null;
     String schemaName = "";
     String primaryKey = "";
     int primaryKeysCount = 0;
@@ -54,9 +55,13 @@ public class UpsertRowByPrimaryKey implements Module {
 
     LOGGER.info("Executing lookup primary key");
     boolean isOracle = dbEngine.equals(Engines.ORACLE.name().toLowerCase());
+    Boolean isMysql = configuration.getString("dbEngine").equals("mysql");
 
     try (Connection connection = Utils.getConnection(configuration)) {
       DatabaseMetaData dbMetaData = connection.getMetaData();
+      if (isMysql) {
+        catalog = configuration.getString("databaseName");
+      }
       if (tableName.contains(".")) {
         schemaName =
             (isOracle) ? tableName.split("\\.")[0].toUpperCase() : tableName.split("\\.")[0];
@@ -64,7 +69,7 @@ public class UpsertRowByPrimaryKey implements Module {
             (isOracle) ? tableName.split("\\.")[1].toUpperCase() : tableName.split("\\.")[1];
       }
       try (ResultSet rs = dbMetaData
-          .getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
+          .getPrimaryKeys(catalog, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
               tableName)) {
         while (rs.next()) {
           primaryKey = rs.getString("COLUMN_NAME");

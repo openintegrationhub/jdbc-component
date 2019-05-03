@@ -55,14 +55,19 @@ public class PrimaryColumnNamesProvider implements DynamicMetadataProvider, Sele
     JsonObject properties = Json.createObjectBuilder().build();
     Connection connection = null;
     ResultSet rs = null;
+    String catalog = null;
     String schemaName = null;
     Boolean isEmpty = true;
     Boolean isOracle = configuration.getString("dbEngine").equals("oracle");
     Boolean isMssql = configuration.getString("dbEngine").equals("mssql");
+    Boolean isMysql = configuration.getString("dbEngine").equals("mysql");
     List<String> primaryKeys = new ArrayList();
     try {
       connection = Utils.getConnection(configuration);
       DatabaseMetaData dbMetaData = connection.getMetaData();
+      if (isMysql) {
+        catalog = configuration.getString("databaseName");
+      }
       if (tableName.contains(".")) {
         schemaName =
             (isOracle) ? tableName.split("\\.")[0].toUpperCase() : tableName.split("\\.")[0];
@@ -70,7 +75,7 @@ public class PrimaryColumnNamesProvider implements DynamicMetadataProvider, Sele
             (isOracle) ? tableName.split("\\.")[1].toUpperCase() : tableName.split("\\.")[1];
       }
       rs = dbMetaData
-          .getPrimaryKeys(null, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
+          .getPrimaryKeys(catalog, ((isOracle && !schemaName.isEmpty()) ? schemaName : null),
               tableName);
       while (rs.next()) {
         primaryKeys.add(rs.getString("COLUMN_NAME"));

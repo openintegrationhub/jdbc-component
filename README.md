@@ -1,6 +1,12 @@
 # JDBC-component
 ## Description
 This is an open source component for working with object-relational database management systems on [elastic.io platform](http://www.elastic.io "elastic.io platform").
+
+### Completeness Matrix
+![JDBC Component Completeness Matrix](https://user-images.githubusercontent.com/5710732/55414696-e7c7bf80-556b-11e9-8aa9-bfe2ebca4303.png)
+
+[JDBC Component Completeness Matrix](https://docs.google.com/spreadsheets/d/1sZr9ydJbMK8v-TguctmFDiqgjRKcrpbdj4CeFuZEkQU/edit?usp=sharing)
+
 ### Purpose
 With this component you will have following triggers:
 
@@ -101,6 +107,8 @@ The format of ``Start Polling From (optional)`` field should be like ``yyyy-mm-d
 - ``mi`` - minute
 - ``ss`` - second
 - ``sss`` - millisecond (optional)
+
+*Please Note: Component Snapshot will not be overwritten in Real-Time flows due to platform behaviour, so we strongly recommend to use Get Rows Polling trigger in Keen Flows only*
 
 ### SELECT trigger (Deprecated)
 This action exists in JDBC component only for backward compatibility. New [**Select trigger**](#select-trigger) is recommended to use.
@@ -209,9 +217,6 @@ This action exists in JDBC component only for backward compatibility. [**Upsert 
 - ``Oracle`` - compatible with Oracle Database 8.1.7 - 12.1.0.2
 - ``MSSQL`` - compatible with Microsoft SQL Server 2008 R2 and higher
 3. The current implementation of the action ``Upsert By Primary Key`` doesn't mark non-nullable fields as required fields at a dynamic metadata. In case of updating such fields with an empty value you will get SQL Exception ``Cannot insert the value NULL into...``. You should manually fill in all non-nullable fields with previous data, if you want to update part of columns in a row, even if data in that fields doesn't change. 
-
-## Known issues
-No known issues are there yet.
 
 ## License
 Apache-2.0 © [elastic.io GmbH](https://www.elastic.io "elastic.io GmbH")
