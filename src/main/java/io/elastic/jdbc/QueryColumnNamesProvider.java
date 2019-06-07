@@ -44,6 +44,18 @@ public class QueryColumnNamesProvider implements DynamicMetadataProvider, Select
   public JsonObject getColumns(JsonObject configuration) {
     JsonObjectBuilder properties = Json.createObjectBuilder();
     String sqlQuery = configuration.getString("sqlQuery");
+    Pattern patternPoint = Pattern.compile("\\B@\\S+");
+    Matcher matcherPoint = patternPoint.matcher(sqlQuery);
+    if (matcherPoint.find()) {
+      do {
+        if (matcherPoint.group().contains(".")){
+          throw new RuntimeException(
+              "The variable name of the prepared statement '"
+              + matcherPoint.group()
+              + "' should not contain '.' symbol");
+        }
+      } while (matcherPoint.find());
+    }
     Pattern pattern = Pattern.compile(Utils.VARS_REGEXP);
     Matcher matcher = pattern.matcher(sqlQuery);
     Boolean isEmpty = true;
