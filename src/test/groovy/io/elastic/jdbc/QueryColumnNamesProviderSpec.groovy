@@ -13,7 +13,7 @@ class QueryColumnNamesProviderSpec extends Specification {
   String wrongSqlQuery
 
   def setup() {
-    sqlQuery = "SELECT * FROM films WHERE watched = @watched:boolean AND created = @created:date"
+    sqlQuery = "SELECT * FROM films WHERE watched = @watched:boolean AND created = @created:date AND name = @name"
     wrongSqlQuery = "SELECT * FROM films WHERE watched = @watched.name:boolean"
   }
 
@@ -24,7 +24,7 @@ class QueryColumnNamesProviderSpec extends Specification {
     JsonObject meta = provider.getMetaModel(configuration.build())
     print meta
     expect:
-    meta.toString() == "{\"out\":{\"type\":\"object\",\"properties\":{\"watched\":{\"title\":\"watched\",\"type\":\"boolean\"},\"created\":{\"title\":\"created\",\"type\":\"date\"}}},\"in\":{\"type\":\"object\",\"properties\":{\"watched\":{\"title\":\"watched\",\"type\":\"boolean\"},\"created\":{\"title\":\"created\",\"type\":\"date\"}}}}"
+    meta.toString() == "{\"out\":{\"type\":\"object\",\"properties\":{\"watched\":{\"title\":\"watched\",\"type\":\"boolean\"},\"created\":{\"title\":\"created\",\"type\":\"date\"},\"name\":{\"title\":\"name\",\"type\":\"string\"}}},\"in\":{\"type\":\"object\",\"properties\":{\"watched\":{\"title\":\"watched\",\"type\":\"boolean\"},\"created\":{\"title\":\"created\",\"type\":\"date\"},\"name\":{\"title\":\"name\",\"type\":\"string\"}}}}"
   }
 
   def "get metadata model, wrong sqlQuery"() {
