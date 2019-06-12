@@ -106,9 +106,9 @@ public class SelectTrigger implements Module {
     Pattern pattern = Pattern.compile(Utils.TEMPLATE_REGEXP);
     Matcher matcher = pattern.matcher(sqlQuery);
     if (matcher.find()) {
-      throw new RuntimeException("Use of prepared statement variables template '"
+      throw new RuntimeException("Use of prepared statement variables is forbidden: '"
           + matcher.group()
-          + "' is forbidden");
+          + "'");
     }
   }
 
