@@ -123,6 +123,8 @@ Internally we use prepared statements, so all incoming data is
 validated against SQL injection, however we had to build a connection from JavaScript types to the SQL data types
 therefore when doing a prepared statements, you would need to add ``:type`` to **each prepared statement variable**.
 
+**Note:** prepared statement variables name could contain: any characters between a-z or A-Z, a digit and a character `_` (`[a-zA-Z0-9_]`). 
+
 For example if you have a following SQL statement:
 
 ```sql

@@ -31,7 +31,8 @@ public class Utils {
   public static final String CFG_DB_ENGINE = "dbEngine";
   public static final String CFG_HOST = "host";
   public static final String CFG_USER = "user";
-  public static final String VARS_REGEXP = "@([\\w_$][\\d\\w_$]*(:(string|boolean|date|number|bigint|float|real))?)";
+  public static final String VARS_REGEXP = "\\B@([\\w_$][\\d\\w_$]*(:(string|boolean|date|number|bigint|float|real))?)";
+  public static final String TEMPLATE_REGEXP = "\\B@\\S+";
   private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
   public static Map<String, String> columnTypes = null;
 
@@ -190,7 +191,7 @@ public class Utils {
       String tableName) {
     DatabaseMetaData md;
     ResultSet rs = null;
-    Map<String, String> columnTypes = new HashMap<String, String>();
+    Map<String, String> columnTypes = new HashMap<>();
     String schemaName = null;
     try {
       md = connection.getMetaData();
@@ -219,7 +220,7 @@ public class Utils {
   }
 
   public static Map<String, String> getVariableTypes(String sqlQuery) {
-    Map<String, String> columnTypes = new HashMap<String, String>();
+    Map<String, String> columnTypes = new HashMap<>();
     Pattern pattern = Pattern.compile(Utils.VARS_REGEXP);
     Matcher matcher = pattern.matcher(sqlQuery);
     Boolean isEmpty;
@@ -299,5 +300,4 @@ public class Utils {
     }
     return row;
   }
-
 }

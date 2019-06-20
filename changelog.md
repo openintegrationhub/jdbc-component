@@ -9,7 +9,12 @@
 ### Fixed 
 ### Security 
 
-## [V2.0] 2018-09-19 elastic.io 
+## [V2.0.1] 2019-06-24 elastic.io 
+
+### Fixed 
+- Improvement error logging for generating metadata of `Select` action
+
+## [V2.0.0] 2018-09-19 elastic.io 
 
 ### Added 
 

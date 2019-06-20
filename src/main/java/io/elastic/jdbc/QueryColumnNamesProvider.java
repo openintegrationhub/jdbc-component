@@ -44,16 +44,37 @@ public class QueryColumnNamesProvider implements DynamicMetadataProvider, Select
   public JsonObject getColumns(JsonObject configuration) {
     JsonObjectBuilder properties = Json.createObjectBuilder();
     String sqlQuery = configuration.getString("sqlQuery");
+    Pattern patternCheckCharacter = Pattern.compile(Utils.TEMPLATE_REGEXP);
+    Matcher matcherCheckCharacter = patternCheckCharacter.matcher(sqlQuery);
     Pattern pattern = Pattern.compile(Utils.VARS_REGEXP);
     Matcher matcher = pattern.matcher(sqlQuery);
     Boolean isEmpty = true;
     if (matcher.find()) {
       do {
+        matcherCheckCharacter.find();
         LOGGER.info("Var = {}", matcher.group());
+        LOGGER.info("Var matcherCheckCharacter = {}", matcherCheckCharacter.group());
+        if (!matcher.group().equals(matcherCheckCharacter.group())){
+          throw new RuntimeException(
+              "Prepared statement variables name '"
+              + matcherCheckCharacter.group()
+              + "' contains a forbidden character. "
+              + "The name could contain: any word character, a digit and a character '_'");
+        }
         JsonObjectBuilder field = Json.createObjectBuilder();
         String result[] = matcher.group().split(":");
-        String name = result[0].substring(1);
-        String type = result[1];
+        String name;
+        String type;
+        if (result.length > 0 && result.length < 3){
+          name = result[0].substring(1);
+          if (result.length == 1){
+            type = "string";
+          } else {
+            type = result[1];
+          }
+        } else {
+          throw new RuntimeException("Incorrect prepared statement" + matcher.group());
+        }
         field.add("title", name)
             .add("type", type);
         properties.add(name, field);

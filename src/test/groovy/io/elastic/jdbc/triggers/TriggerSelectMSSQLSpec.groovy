@@ -1,7 +1,7 @@
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import io.elastic.jdbc.actions.SelectAction
+import io.elastic.jdbc.triggers.SelectTrigger
 import spock.lang.*
 
 import javax.json.Json
@@ -10,7 +10,8 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 @Ignore
-class SelectMSSQLSpec extends Specification {
+class TriggerSelectMSSQLSpec extends Specification {
+
   @Shared
   def user = System.getenv("CONN_USER_MSSQL")
   @Shared
@@ -39,17 +40,17 @@ class SelectMSSQLSpec extends Specification {
   @Shared
   EventEmitter emitter
   @Shared
-  SelectAction action
+  SelectTrigger trigger
 
   def setupSpec() {
     connection = DriverManager.getConnection(connectionString, user, password)
   }
 
   def setup() {
-    action = new SelectAction()
+    trigger = new SelectTrigger()
   }
 
-  def runAction(JsonObject config, JsonObject body, JsonObject snapshot) {
+  def runTrigger(JsonObject config, JsonObject body, JsonObject snapshot) {
     Message msg = new Message.Builder().body(body).build()
     errorCallback = Mock(EventEmitter.Callback)
     snapshotCallback = Mock(EventEmitter.Callback)
@@ -63,7 +64,7 @@ class SelectMSSQLSpec extends Specification {
         .onRebound(reboundCallback)
         .onHttpReplyCallback(onHttpReplyCallback).build()
     ExecutionParameters params = new ExecutionParameters(msg, emitter, config, snapshot)
-    action.execute(params);
+    trigger.execute(params);
   }
 
   def getStarsConfig() {
@@ -74,7 +75,7 @@ class SelectMSSQLSpec extends Specification {
         .add("host", host)
         .add("port", port)
         .add("databaseName", databaseName)
-        .add("sqlQuery", "SELECT * from stars")
+        .add("sqlQuery", "SELECT * from stars where id = 1")
         .build();
     return config;
   }
@@ -101,7 +102,7 @@ class SelectMSSQLSpec extends Specification {
     JsonObject body = Json.createObjectBuilder().build()
 
     when:
-    runAction(getStarsConfig(), body, snapshot)
+    runTrigger(getStarsConfig(), body, snapshot)
     then:
     0 * errorCallback.receive(_)
   }
