@@ -26,7 +26,7 @@ class SelectMySQLSpec extends Specification {
   @Shared
   def host = System.getenv("CONN_HOST_MYSQL")
   @Shared
-  def port = "3306"
+  def port = System.getenv("CONN_PORT_MYSQL")
 
   @Shared
   Connection connection
