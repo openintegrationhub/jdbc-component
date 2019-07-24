@@ -140,7 +140,7 @@ public class Utils {
     }
   }
 
-  private static String detectColumnType(Integer sqlType, String sqlTypeName) {
+  public static String detectColumnType(Integer sqlType, String sqlTypeName) {
     if (sqlType == Types.NUMERIC || sqlType == Types.DECIMAL || sqlType == Types.TINYINT
         || sqlType == Types.SMALLINT || sqlType == Types.INTEGER || sqlType == Types.BIGINT
         || sqlType == Types.REAL || sqlType == Types.FLOAT || sqlType == Types.DOUBLE) {
@@ -159,6 +159,9 @@ public class Utils {
       if (sqlTypeName.toLowerCase().contains("timestamp")) {
         return "timestamp";
       }
+    }
+    if (sqlType == -10 || sqlType == Types.REF_CURSOR) {
+      return "array";
     }
     return "string";
   }
@@ -309,5 +312,20 @@ public class Utils {
       throw new RuntimeException(e);
     }
     return row;
+  }
+
+  public static String cleanJsonType(String rawType) {
+    switch (rawType) {
+      case ("number"):
+        return "number";
+      case ("boolean"):
+        return "boolean";
+      case ("array"):
+        return "array";
+      case ("object"):
+        return "object";
+      default:
+        return "string";
+    }
   }
 }
