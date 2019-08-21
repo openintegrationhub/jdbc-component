@@ -1,6 +1,9 @@
 package io.elastic.jdbc.QueryBuilders;
 
+import io.elastic.jdbc.ProcedureParameter;
+import io.elastic.jdbc.ProcedureParameter.Direction;
 import io.elastic.jdbc.Utils;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,7 +13,10 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
@@ -18,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class Query {
+
   private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);
 
   protected Integer skipNumber = 0;
@@ -330,6 +337,113 @@ public abstract class Query {
         }
         return row.build();
       }
+    }
+  }
+
+  protected String generateStatementParamsMask(Map<String, ProcedureParameter> procedureParams) {
+    StringBuilder statementArgsStructure = new StringBuilder("(");
+    procedureParams.keySet()
+        .forEach(p -> statementArgsStructure
+            .append(p)
+            .append(" => :")
+            .append(p)
+            .append(", ")
+        );
+
+    String result = statementArgsStructure.toString();
+    if (procedureParams.size() > 0) {
+      result = statementArgsStructure.substring(0, statementArgsStructure.length() - 2);
+    }
+    return result + ")";
+  }
+
+  protected String generateStatementWildcardMask(Map<String, ProcedureParameter> procedureParams) {
+    StringBuilder statementArgsStructure = new StringBuilder("(");
+    procedureParams.keySet()
+        .forEach(p -> statementArgsStructure.append("?, "));
+
+    String result = statementArgsStructure.toString();
+    if (procedureParams.size() > 0) {
+      result = statementArgsStructure.substring(0, statementArgsStructure.length() - 2);
+    }
+    return result + ")";
+  }
+
+  protected abstract CallableStatement prepareCallableStatement(Connection connection,
+      String procedureName,
+      Map<String, ProcedureParameter> procedureParams, JsonObject messageBody)
+      throws SQLException;
+
+  public abstract JsonObject callProcedure(Connection connection, JsonObject body,
+      JsonObject configuration)
+      throws SQLException;
+
+  protected JsonObjectBuilder addValueToResultJson(JsonObjectBuilder resultBuilder,
+      CallableStatement stmt, Map<String, ProcedureParameter> procedureParams, String name)
+      throws SQLException {
+
+    if (stmt.getObject(name) == null) {
+      return resultBuilder.addNull(name);
+    }
+
+    String type = Utils
+        .cleanJsonType(Utils.detectColumnType(procedureParams.get(name).getType(), ""));
+
+    switch (type) {
+      case ("boolean"):
+        return resultBuilder.add(name, stmt.getBoolean(name));
+      case ("number"):
+        return resultBuilder.add(name, stmt.getDouble(name));
+      case ("array"):
+        ResultSet cursorSet = (ResultSet) stmt.getObject(name);
+        JsonArrayBuilder array = Json.createArrayBuilder();
+
+        Map<String, String> params =
+            IntStream.range(1, cursorSet.getMetaData().getColumnCount() + 1)
+                .mapToObj(i -> {
+                  try {
+                    return new ProcedureParameter(cursorSet.getMetaData().getColumnName(i),
+                        Direction.OUT, cursorSet.getMetaData().getColumnType(i));
+                  } catch (SQLException e) {
+                    throw new IllegalArgumentException(e);
+                  }
+                })
+                .collect(Collectors.toMap(ProcedureParameter::getName, p -> Utils
+                    .cleanJsonType(
+                        Utils.detectColumnType(p.getType(), ""))));
+
+        while (cursorSet.next()) {
+          JsonObjectBuilder entity = Json.createObjectBuilder();
+
+          params.keySet().forEach(key -> {
+            try {
+              if (cursorSet.getObject(key) == null) {
+                entity.addNull(key);
+                return;
+              }
+
+              switch (params.get(key)) {
+                case ("number"):
+                  entity.add(key, cursorSet.getDouble(key));
+                  break;
+                case ("boolean"):
+                  entity.add(key, cursorSet.getBoolean(key));
+                  break;
+                default:
+                  entity.add(key, cursorSet.getString(key));
+                  break;
+              }
+            } catch (SQLException e) {
+              e.printStackTrace();
+            }
+          });
+
+          array.add(entity.build());
+        }
+
+        return resultBuilder.add(name, array.build());
+      default:
+        return resultBuilder.add(name, stmt.getString(name));
     }
   }
 

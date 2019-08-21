@@ -31,7 +31,8 @@ public class Utils {
   public static final String CFG_DB_ENGINE = "dbEngine";
   public static final String CFG_HOST = "host";
   public static final String CFG_USER = "user";
-  public static final String VARS_REGEXP = "@([\\w_$][\\d\\w_$]*(:(string|boolean|date|number|bigint|float|real))?)";
+  public static final String VARS_REGEXP = "\\B@([\\w_$][\\d\\w_$]*(:(string|boolean|date|number|bigint|float|real))?)";
+  public static final String TEMPLATE_REGEXP = "\\B@(?:(?![=\\)\\(])[\\S])+";
   private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
   public static Map<String, String> columnTypes = null;
 
@@ -101,31 +102,31 @@ public class Utils {
       JsonObject body) throws SQLException {
     try {
       if (isNumeric(colName)) {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setBigDecimal(paramNumber, body.getJsonNumber(colName).bigDecimalValue());
         } else {
           statement.setBigDecimal(paramNumber, null);
         }
       } else if (isTimestamp(colName)) {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setTimestamp(paramNumber, Timestamp.valueOf(body.getString(colName)));
         } else {
           statement.setTimestamp(paramNumber, null);
         }
       } else if (isDate(colName)) {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setDate(paramNumber, Date.valueOf(body.getString(colName)));
         } else {
           statement.setDate(paramNumber, null);
         }
       } else if (isBoolean(colName)) {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setBoolean(paramNumber, body.getBoolean(colName));
         } else {
           statement.setBoolean(paramNumber, false);
         }
       } else {
-        if (body.get(colName) != null) {
+        if ((body.get(colName) != null) && (body.get(colName) != JsonValue.NULL)) {
           statement.setString(paramNumber, body.getString(colName));
         } else {
           statement.setNull(paramNumber, Types.VARCHAR);
@@ -139,7 +140,7 @@ public class Utils {
     }
   }
 
-  private static String detectColumnType(Integer sqlType, String sqlTypeName) {
+  public static String detectColumnType(Integer sqlType, String sqlTypeName) {
     if (sqlType == Types.NUMERIC || sqlType == Types.DECIMAL || sqlType == Types.TINYINT
         || sqlType == Types.SMALLINT || sqlType == Types.INTEGER || sqlType == Types.BIGINT
         || sqlType == Types.REAL || sqlType == Types.FLOAT || sqlType == Types.DOUBLE) {
@@ -158,6 +159,9 @@ public class Utils {
       if (sqlTypeName.toLowerCase().contains("timestamp")) {
         return "timestamp";
       }
+    }
+    if (sqlType == -10 || sqlType == Types.REF_CURSOR) {
+      return "array";
     }
     return "string";
   }
@@ -190,7 +194,7 @@ public class Utils {
       String tableName) {
     DatabaseMetaData md;
     ResultSet rs = null;
-    Map<String, String> columnTypes = new HashMap<String, String>();
+    Map<String, String> columnTypes = new HashMap<>();
     String schemaName = null;
     try {
       md = connection.getMetaData();
@@ -219,15 +223,25 @@ public class Utils {
   }
 
   public static Map<String, String> getVariableTypes(String sqlQuery) {
-    Map<String, String> columnTypes = new HashMap<String, String>();
+    Map<String, String> columnTypes = new HashMap<>();
     Pattern pattern = Pattern.compile(Utils.VARS_REGEXP);
     Matcher matcher = pattern.matcher(sqlQuery);
     Boolean isEmpty;
     if (matcher.find()) {
       do {
         String result[] = matcher.group().split(":");
-        String name = result[0].substring(1);
-        String type = result[1];
+        String name;
+        String type;
+        if (result.length > 0 && result.length < 3){
+          name = result[0].substring(1);
+          if (result.length == 1){
+            type = "string";
+          } else {
+            type = result[1];
+          }
+        } else {
+          throw new RuntimeException("Incorrect prepared statement" + matcher.group());
+        }
         columnTypes.put(name, type);
         isEmpty = false;
       } while (matcher.find());
@@ -300,4 +314,18 @@ public class Utils {
     return row;
   }
 
+  public static String cleanJsonType(String rawType) {
+    switch (rawType) {
+      case ("number"):
+        return "number";
+      case ("boolean"):
+        return "boolean";
+      case ("array"):
+        return "array";
+      case ("object"):
+        return "object";
+      default:
+        return "string";
+    }
+  }
 }

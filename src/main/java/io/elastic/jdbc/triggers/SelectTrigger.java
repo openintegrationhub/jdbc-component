@@ -7,15 +7,15 @@ import io.elastic.jdbc.QueryBuilders.Query;
 import io.elastic.jdbc.QueryFactory;
 import io.elastic.jdbc.Utils;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +34,9 @@ public class SelectTrigger implements Module {
   public final void execute(ExecutionParameters parameters) {
     LOGGER.info("About to execute select trigger");
     final JsonObject configuration = parameters.getConfiguration();
-    JsonObject snapshot = parameters.getSnapshot();
     checkConfig(configuration);
+    String sqlQuery = configuration.getString(SQL_QUERY_VALUE);
+    JsonObject snapshot = parameters.getSnapshot();
     Connection connection = Utils.getConnection(configuration);
     Integer skipNumber = 0;
 
@@ -60,12 +61,11 @@ public class SelectTrigger implements Module {
       pollingValue = cts;
     }
     LOGGER.info("EIO_LAST_POLL = {}", pollingValue);
-    String sqlQuery = configuration.getString(SQL_QUERY_VALUE);
+
     if (snapshot.get(PROPERTY_SKIP_NUMBER) != null) {
       skipNumber = snapshot.getInt(PROPERTY_SKIP_NUMBER);
     }
     LOGGER.info("SQL QUERY {} : ", sqlQuery);
-    ResultSet rs = null;
     LOGGER.info("Executing select trigger");
     try {
       QueryFactory queryFactory = new QueryFactory();
@@ -97,10 +97,18 @@ public class SelectTrigger implements Module {
   }
 
   private void checkConfig(JsonObject config) {
-    final JsonString sqlQuery = config.getJsonString(SQL_QUERY_VALUE);
+    final String sqlQuery = config.getString(SQL_QUERY_VALUE);
 
-    if (sqlQuery == null || sqlQuery.toString().isEmpty()) {
+    if (sqlQuery == null || sqlQuery.isEmpty()) {
       throw new RuntimeException("SQL Query is required field");
+    }
+
+    Pattern pattern = Pattern.compile(Utils.TEMPLATE_REGEXP);
+    Matcher matcher = pattern.matcher(sqlQuery);
+    if (matcher.find()) {
+      throw new RuntimeException("Use of prepared statement variables is forbidden: '"
+          + matcher.group()
+          + "'");
     }
   }
 

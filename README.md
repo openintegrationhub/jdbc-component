@@ -123,6 +123,8 @@ Internally we use prepared statements, so all incoming data is
 validated against SQL injection, however we had to build a connection from JavaScript types to the SQL data types
 therefore when doing a prepared statements, you would need to add ``:type`` to **each prepared statement variable**.
 
+**Note:** prepared statement variables name could contain: any characters between a-z or A-Z, a digit and a character `_` (`[a-zA-Z0-9_]`). 
+
 For example if you have a following SQL statement:
 
 ```sql
@@ -204,6 +206,47 @@ Checkbox ``Don't throw Error on an Empty Result`` allows to emit an empty respon
 ![image](https://user-images.githubusercontent.com/40201204/43644579-f593d1c8-9737-11e8-9b97-ee9e575a19f7.png)
 As an input metadata you will get a Primary Key field to provide the data inside as a clause value.
 
+### Execute stored procedure
+This action calls stored procedure from selected `DB Schema` and `Stored procedure` name
+#### Input fields description
+- **DB Schema** - a schema that contains a procedure to call. Must be selected from the dropdown list before `Stored procedure` name
+- **Stored procedure** - a name of a procedure to call, can be selected from the dropdown list
+
+Metadata generates automatically using `IN` & `IN OUT` procedure parameters for input, and `OUT` & `IN OUT` procedure parameters for output.
+
+As array fields this action now support ONLY:
+- CURSOR (as SQL type)
+- REF CURSOR (as ORACLE type)
+The result for this type of fields would be returned as an array of JSON objects.
+
+This action DOES NOT processing MSSql @RETURN_VALUE.
+
+- For MySQL component same to DATABASE is same to SCHEMA by it's 
+[definition](https://dev.mysql.com/doc/refman/8.0/en/getting-information.html), so DB Schema dropdown is empty for MySQL. 
+
+- [MSSQL DB](https://docs.microsoft.com/en-us/sql/t-sql/statements/create-procedure-transact-sql?view=sql-server-2017) stored procedures has only IN and INOUT fields.
+
+#### Usage case example
+
+For Oracle DB procedure:
+
+```
+create PROCEDURE "INSERT_EMPLOYEE"(
+        i_emp_id IN EMPLOYEE.EMPID%TYPE,
+        i_name IN EMPLOYEE.EMPNAME%TYPE,
+        i_department IN EMPLOYEE.DEPARTMENT%TYPE)
+IS
+BEGIN
+  INSERT INTO EMPLOYEE (EMPID, EMPNAME, DEPARTMENT)
+  VALUES (i_emp_id, i_name, i_department);
+END;
+```
+
+Component generates next metadata:
+
+![image](https://user-images.githubusercontent.com/22715422/62056735-edd26200-b226-11e9-871e-0efc305d70b2.png)
+
+
 ### Create or update record action (Deprecated)
 This action exists in JDBC component only for backward compatibility. [**Upsert row by primary key**](#upsert-row-by-primary-key-action) Action is recommended to use.
 
@@ -217,6 +260,10 @@ This action exists in JDBC component only for backward compatibility. [**Upsert 
 - ``Oracle`` - compatible with Oracle Database 8.1.7 - 12.1.0.2
 - ``MSSQL`` - compatible with Microsoft SQL Server 2008 R2 and higher
 3. The current implementation of the action ``Upsert By Primary Key`` doesn't mark non-nullable fields as required fields at a dynamic metadata. In case of updating such fields with an empty value you will get SQL Exception ``Cannot insert the value NULL into...``. You should manually fill in all non-nullable fields with previous data, if you want to update part of columns in a row, even if data in that fields doesn't change. 
+4. The current implementation of the action ``Execute stored procedure`` doesn't support ResultSet MSSQL output.
+5. The current implementation of the action ``Execute stored procedure`` doesn't support any array types parameters.
+6. The current implementation of the action ``Execute stored procedure`` doesn't support MySQL schemas dropdown list. 
+(MySQL does not have schemas by definition)
 
 ## License
 Apache-2.0 © [elastic.io GmbH](https://www.elastic.io "elastic.io GmbH")

@@ -1,33 +1,25 @@
 # jdbc Component Change Log 
 
+## 2.1.0 (2019-07-22)
 
-## [Unrelased]
-### Added 
-### Change 
-### Deprecated 
-### Removed 
-### Fixed 
-### Security 
+* Add Execute stored procedure action
 
-## [V2.0] 2018-09-19 elastic.io 
+## 2.0.1 (2019-06-24)
 
-### Added 
+* Fix error logging for generating metadata of `Select` action
 
-Triggers 
-- SELECT 
-- GET ROWS POLLING
+## 2.0.0 (2018-09-19)
 
-Actions 
-- SELECT 
-- LOOKUP BY PRIMARY KEY
-- UPSERT BY PRIMARY KEY (for migration)
-- DELETE BY PRIMARY KEY
+* Add Select trigger
+* Add Get rows polling trigger
 
-### Removed 
-Actions 
-- CreateOrUpdateRecord
+* Add Select action
+* Add Lookup by primary key action
+* Add Upsert by primary key action (for migration)
+* Add Delete by primary key action
 
-### Fixed 
-- fix issue in postgresql - getDate(null)
-- fix null values as input for select
+* Remove CreateOrUpdateRecord action
+
+* Fix issue in postgresql - getDate(null)
+* Fix null values as input for select
 
