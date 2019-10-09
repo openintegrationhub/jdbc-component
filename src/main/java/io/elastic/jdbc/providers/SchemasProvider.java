@@ -20,8 +20,21 @@ public class SchemasProvider implements SelectModelProvider {
   @Override
   public JsonObject getSelectModel(JsonObject configuration) {
     JsonObjectBuilder result = Json.createObjectBuilder();
+
+    LOGGER.info("Searching for %s db schemas...", configuration.getString("databaseName"));
     List<String> proceduresNames = getSchemasList(configuration);
+
+    LOGGER.info("Found %d db schemas", proceduresNames.size());
+    LOGGER.debug("Schemas: " + proceduresNames.stream().reduce((s1, s2) -> s1 + ", " + s2).orElse(""));
+
     proceduresNames.forEach(procedure -> result.add(procedure, procedure));
+
+    if (configuration.getString("dbEngine").equals("mysql")) {
+      LOGGER.info("Adding placeholder to MySQL schemas list...");
+      formatMySQLSchemasResponse(result, configuration.getString("databaseName"));
+    }
+
+    LOGGER.info("Response building complete. Returning result...");
     return result.build();
   }
 
@@ -41,4 +54,10 @@ public class SchemasProvider implements SelectModelProvider {
 
     return result;
   }
+
+  private JsonObjectBuilder formatMySQLSchemasResponse(JsonObjectBuilder structure, String dbName) {
+    structure.add(dbName, dbName);
+    return structure;
+  }
+
 }
