@@ -1,4 +1,11 @@
 # JDBC Component
+## 2.3.2 (October 21, 2019)
+
+* Add rebound mechanism in case of deadlocks for actions: Insert, UpsertByPK, DeleteByPK
+
+## 2.4.0 (october 17, 2019)
+
+* Add `Custom Query` action
 
 ## 2.3.1 (September 30, 2019)
  
