@@ -1,0 +1,37 @@
+{
+  "out": {
+    "type": "object",
+    "properties": {
+      "result": {
+        "required": true,
+        "title": "result",
+        "type": "boolean"
+      }
+    }
+  },
+  "in": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "required": true,
+        "title": "name",
+        "type": "string"
+      },
+      "radius": {
+        "required": true,
+        "title": "radius",
+        "type": "number"
+      },
+      "destination": {
+        "required": false,
+        "title": "destination",
+        "type": "number"
+      },
+      "createdat": {
+        "required": false,
+        "title": "createdat",
+        "type": "string"
+      }
+    }
+  }
+}
