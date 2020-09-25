@@ -66,7 +66,8 @@ public class Utils {
     engineType.loadDriverClass();
     final String connectionString = engineType.getConnectionString(host, port, databaseName);
     Properties properties = getConfigurationProperties(config, engineType);
-    LOGGER.info("Connecting to {}", connectionString);
+    LOGGER.info("Connecting to {}", host);
+    LOGGER.trace("Connection string: {}", connectionString);
     return DriverManager.getConnection(connectionString, properties);
   }
 
@@ -93,7 +94,7 @@ public class Utils {
         throw new RuntimeException(e);
       }
     }
-    LOGGER.info("Got properties: {}", properties);
+    LOGGER.trace("Got properties: {}", properties);
     properties.setProperty("user", user);
     properties.setProperty("password", password);
     return properties;
@@ -118,7 +119,8 @@ public class Utils {
         }
       }
     } catch (NullPointerException | ClassCastException e) {
-      LOGGER.info("key {} doesn't have any mapping: {}", key, e);
+      LOGGER.error("Processed key doesn't have any mapping");
+      LOGGER.trace("Key {} doesn't have any mapping: {}", key, e);
     }
     return value.toString().replaceAll("\"", "");
   }
@@ -419,7 +421,7 @@ public class Utils {
       while (resultSet.next()) {
         primaryKeysNames.add(resultSet.getString("COLUMN_NAME"));
       }
-      LOGGER.debug("Found primary key(s): '{}'", primaryKeysNames);
+      LOGGER.trace("Found primary key(s): '{}'", primaryKeysNames);
     } catch (SQLException e) {
       String errorMessage = "Cannot get Primary Keys Names";
       LOGGER.error(errorMessage, e);

@@ -67,7 +67,7 @@ public class LookupRowByPrimaryKey implements Module {
     boolean isOracle = dbEngine.equals(Engines.ORACLE.name().toLowerCase());
 
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      LOGGER.info("{} = {}", entry.getKey(), entry.getValue());
+      LOGGER.trace("{} = {}", entry.getKey(), entry.getValue());
       primaryKey.append(entry.getKey());
       primaryValue.append(entry.getValue());
       primaryKeysCount++;
@@ -78,25 +78,25 @@ public class LookupRowByPrimaryKey implements Module {
       try (Connection connection = Utils.getConnection(configuration)) {
         LOGGER.info("Executing lookup row by primary key action");
         Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
-        LOGGER.info("Detected column types: " + Utils.columnTypes);
+        LOGGER.debug("Detected column types: " + Utils.columnTypes);
         try {
           QueryFactory queryFactory = new QueryFactory();
           Query query = queryFactory.getQuery(dbEngine);
-          LOGGER.info("Lookup parameters: {} = {}", primaryKey.toString(), primaryValue.toString());
+          LOGGER.trace("Lookup parameters: {} = {}", primaryKey.toString(), primaryValue.toString());
           query.from(tableName).lookup(primaryKey.toString(), primaryValue.toString());
           checkConfig(configuration);
 
           JsonObject row = query.executeLookup(connection, body);
           if (row.size() != 0) {
             LOGGER.info("Emitting data");
-            LOGGER.info(row.toString());
+            LOGGER.trace(row.toString());
             parameters.getEventEmitter().emitData(new Message.Builder().body(row).build());
           }
           if (row.size() == 0 && nullableResult) {
             JsonObjectBuilder emptyResBuilder = Json.createObjectBuilder();
             emptyResBuilder.add("empty dataset", JsonValue.NULL);
             LOGGER.info("Emitting data");
-            LOGGER.info(JSON.stringify(emptyResBuilder.build()));
+            LOGGER.trace(JSON.stringify(emptyResBuilder.build()));
             parameters.getEventEmitter().emitData(new Message.Builder().body(emptyResBuilder.build()).build());
           } else if (row.size() == 0 && !nullableResult) {
             LOGGER.info("Empty response. Error message will be returned");
@@ -107,14 +107,15 @@ public class LookupRowByPrimaryKey implements Module {
               .add(PROPERTY_ID_COLUMN, primaryKey.toString())
               .add(PROPERTY_LOOKUP_VALUE, primaryValue.toString())
               .add(PROPERTY_NULLABLE_RESULT, nullableResult).build();
-          LOGGER.info("Emitting new snapshot {}", snapshot.toString());
+          LOGGER.trace("Emitting new snapshot {}", snapshot.toString());
           parameters.getEventEmitter().emitSnapshot(snapshot);
         } catch (SQLException e) {
-          LOGGER.error("Failed to make request", e.toString());
+          LOGGER.error("Failed to make request");
+          LOGGER.trace("Error: {}", e.toString());
           throw new RuntimeException(e);
         }
       } catch (SQLException e) {
-        LOGGER.error("Failed to close connection", e.toString());
+        LOGGER.error("Failed to close connection: {}", e.toString());
       }
     } else {
       LOGGER.error("Error: Should be one Primary Key");
