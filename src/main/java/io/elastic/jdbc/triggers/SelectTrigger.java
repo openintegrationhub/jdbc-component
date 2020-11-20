@@ -2,7 +2,7 @@ package io.elastic.jdbc.triggers;
 
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 import io.elastic.jdbc.query_builders.Query;
 import io.elastic.jdbc.utils.QueryFactory;
 import io.elastic.jdbc.utils.Utils;
@@ -19,7 +19,7 @@ import javax.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SelectTrigger implements Module {
+public class SelectTrigger implements Function {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SelectTrigger.class);
   private static final String PROPERTY_DB_ENGINE = "dbEngine";
@@ -59,12 +59,11 @@ public class SelectTrigger implements Module {
               + formattedDate);
       pollingValue = cts;
     }
-    LOGGER.info("EIO_LAST_POLL = {}", pollingValue);
+    LOGGER.debug("EIO_LAST_POLL = {}", pollingValue);
 
     if (snapshot.get(PROPERTY_SKIP_NUMBER) != null) {
       skipNumber = snapshot.getInt(PROPERTY_SKIP_NUMBER);
     }
-    LOGGER.trace("SQL QUERY {} : ", sqlQuery);
     LOGGER.info("Executing select trigger");
     try {
       QueryFactory queryFactory = new QueryFactory();
@@ -74,12 +73,11 @@ public class SelectTrigger implements Module {
         sqlQuery = sqlQuery.replace(LAST_POLL_PLACEHOLDER, "?");
         query.selectPolling(sqlQuery, pollingValue);
       }
-      LOGGER.trace("SQL Query: {}", sqlQuery);
       Connection connection = Utils.getConnection(configuration);
       ArrayList<JsonObject> resultList = query.executeSelectTrigger(connection, sqlQuery);
       for (int i = 0; i < resultList.size(); i++) {
-        LOGGER.trace("Columns count: {} from {}", i + 1, resultList.size());
-        LOGGER.trace("Emitting data {}", resultList.get(i).toString());
+        LOGGER.info("Columns count: {} from {}", i + 1, resultList.size());
+        LOGGER.info("Emitting data");
         parameters.getEventEmitter()
             .emitData(new Message.Builder().body(resultList.get(i)).build());
       }
@@ -88,7 +86,7 @@ public class SelectTrigger implements Module {
           .add(PROPERTY_SKIP_NUMBER, skipNumber + resultList.size())
           .add(LAST_POLL_PLACEHOLDER, pollingValue.toString())
           .add(SQL_QUERY_VALUE, sqlQuery).build();
-      LOGGER.trace("Emitting new snapshot {}", snapshot.toString());
+      LOGGER.info("Emitting new snapshot");
       parameters.getEventEmitter().emitSnapshot(snapshot);
     } catch (SQLException e) {
       LOGGER.error("Failed to make request");
@@ -111,5 +109,4 @@ public class SelectTrigger implements Module {
           + "'");
     }
   }
-
 }

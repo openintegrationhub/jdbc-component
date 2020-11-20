@@ -3,7 +3,7 @@ package io.elastic.jdbc.actions;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.JSON;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 import io.elastic.jdbc.utils.Engines;
 import io.elastic.jdbc.query_builders.Query;
 import io.elastic.jdbc.utils.QueryFactory;
@@ -19,7 +19,7 @@ import javax.json.JsonValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LookupRowByPrimaryKey implements Module {
+public class LookupRowByPrimaryKey implements Function {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LookupRowByPrimaryKey.class);
   private static final String PROPERTY_DB_ENGINE = "dbEngine";
@@ -67,7 +67,6 @@ public class LookupRowByPrimaryKey implements Module {
     boolean isOracle = dbEngine.equals(Engines.ORACLE.name().toLowerCase());
 
     for (Map.Entry<String, JsonValue> entry : body.entrySet()) {
-      LOGGER.trace("{} = {}", entry.getKey(), entry.getValue());
       primaryKey.append(entry.getKey());
       primaryValue.append(entry.getValue());
       primaryKeysCount++;
@@ -78,25 +77,23 @@ public class LookupRowByPrimaryKey implements Module {
       try (Connection connection = Utils.getConnection(configuration)) {
         LOGGER.info("Executing lookup row by primary key action");
         Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
-        LOGGER.debug("Detected column types: " + Utils.columnTypes);
+        LOGGER.debug("Detected column types");
         try {
           QueryFactory queryFactory = new QueryFactory();
           Query query = queryFactory.getQuery(dbEngine);
-          LOGGER.trace("Lookup parameters: {} = {}", primaryKey.toString(), primaryValue.toString());
+          LOGGER.debug("Got Lookup parameters");
           query.from(tableName).lookup(primaryKey.toString(), primaryValue.toString());
           checkConfig(configuration);
 
           JsonObject row = query.executeLookup(connection, body);
           if (row.size() != 0) {
             LOGGER.info("Emitting data");
-            LOGGER.trace(row.toString());
             parameters.getEventEmitter().emitData(new Message.Builder().body(row).build());
           }
           if (row.size() == 0 && nullableResult) {
             JsonObjectBuilder emptyResBuilder = Json.createObjectBuilder();
             emptyResBuilder.add("empty dataset", JsonValue.NULL);
             LOGGER.info("Emitting data");
-            LOGGER.trace(JSON.stringify(emptyResBuilder.build()));
             parameters.getEventEmitter().emitData(new Message.Builder().body(emptyResBuilder.build()).build());
           } else if (row.size() == 0 && !nullableResult) {
             LOGGER.info("Empty response. Error message will be returned");
@@ -107,15 +104,14 @@ public class LookupRowByPrimaryKey implements Module {
               .add(PROPERTY_ID_COLUMN, primaryKey.toString())
               .add(PROPERTY_LOOKUP_VALUE, primaryValue.toString())
               .add(PROPERTY_NULLABLE_RESULT, nullableResult).build();
-          LOGGER.trace("Emitting new snapshot {}", snapshot.toString());
+          LOGGER.info("Emitting new snapshot");
           parameters.getEventEmitter().emitSnapshot(snapshot);
         } catch (SQLException e) {
           LOGGER.error("Failed to make request");
-          LOGGER.trace("Error: {}", e.toString());
           throw new RuntimeException(e);
         }
       } catch (SQLException e) {
-        LOGGER.error("Failed to close connection: {}", e.toString());
+        LOGGER.error("Failed to close connection");
       }
     } else {
       LOGGER.error("Error: Should be one Primary Key");

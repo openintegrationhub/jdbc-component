@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 import io.elastic.jdbc.query_builders.QueryOld;
 import io.elastic.jdbc.utils.SailorVersionsAdapter;
 import io.elastic.jdbc.utils.TriggerQueryFactory;
@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Deprecated
-public class SelectTriggerOld implements Module {
+public class SelectTriggerOld implements Function {
     private static final Logger logger = LoggerFactory.getLogger(SelectTriggerOld.class);
     public static final String PROPERTY_TABLE_NAME = "tableName";
     public static final String PROPERTY_ORDER_FIELD = "orderField";
@@ -68,12 +68,11 @@ public class SelectTriggerOld implements Module {
                 }
                 rows.add(row);
                 logger.info("Emitting data");
-                logger.trace(row.toString());
                 parameters.getEventEmitter().emitData(new Message.Builder().body(SailorVersionsAdapter.gsonToJavax(row)).build());
             }
             snapshot.addProperty("skipNumber", skipNumber + rows.size());
             snapshot.addProperty(PROPERTY_TABLE_NAME, tableName);
-            logger.trace("Emitting new snapshot {}", snapshot.toString());
+            logger.info("Emitting new snapshot");
             parameters.getEventEmitter().emitSnapshot(SailorVersionsAdapter.gsonToJavax(snapshot));
         } catch (SQLException e) {
             logger.error("Failed to make request");

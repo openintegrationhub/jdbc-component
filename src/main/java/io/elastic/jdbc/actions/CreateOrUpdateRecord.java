@@ -4,7 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 import io.elastic.jdbc.utils.EnginesOld;
 import io.elastic.jdbc.utils.SailorVersionsAdapter;
 import io.elastic.jdbc.utils.UtilsOld;
@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Deprecated
-public class CreateOrUpdateRecord implements Module {
+public class CreateOrUpdateRecord implements Function {
     private static final Logger logger = LoggerFactory.getLogger(CreateOrUpdateRecord.class);
 
     private Connection connection = null;
@@ -40,13 +40,13 @@ public class CreateOrUpdateRecord implements Module {
         if (!(!body.has(idColumn) || body.get(idColumn).isJsonNull() || body.get(idColumn).getAsString().isEmpty())) {
             idColumnValue = body.get(idColumn).getAsString();
         }
-        logger.trace("ID column value: {}", idColumnValue);
+        logger.debug("Got ID column value");
         String db = configuration.get(UtilsOld.CFG_DB_ENGINE).getAsString();
         isOracle = db.equals(EnginesOld.ORACLE.name().toLowerCase());
         try {
             connection = UtilsOld.getConnection(configuration);
             columnTypes = getColumnTypes(tableName);
-            logger.debug("Detected column types: " + columnTypes);
+            logger.debug("Detected column types");
             if (recordExists(tableName, idColumn, idColumnValue)) {
                 makeUpdate(tableName, idColumn, idColumnValue, body);
             } else {
@@ -60,7 +60,7 @@ public class CreateOrUpdateRecord implements Module {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    logger.error(e.toString());
+                    logger.error("Failed to close connection!");
                 }
             }
         }
@@ -91,7 +91,7 @@ public class CreateOrUpdateRecord implements Module {
                 try {
                     rs.close();
                 } catch (Exception e) {
-                    logger.error(e.toString());
+                    logger.error("Failed to close result set!");
                 }
             }
         }
@@ -137,7 +137,7 @@ public class CreateOrUpdateRecord implements Module {
 
     private void setStatementParam(PreparedStatement statement, int paramNumber, String colName, String colValue) throws SQLException {
         if (isNumeric(colName)) {
-        	statement.setBigDecimal(paramNumber, new BigDecimal(colValue));
+            statement.setBigDecimal(paramNumber, new BigDecimal(colValue));
         } else if (isTimestamp(colName)) {
             statement.setTimestamp(paramNumber, Timestamp.valueOf(colValue));
         } else if (isDate(colName)) {
@@ -151,7 +151,7 @@ public class CreateOrUpdateRecord implements Module {
         String query = "SELECT COUNT(*) FROM " + tableName + " WHERE " + idColumn + " = ?";
         PreparedStatement statement = connection.prepareStatement(query);
         setStatementParam(statement, 1, idColumn, idValue);
-        logger.trace("{}",statement);
+        logger.info("Prepared a statement. Executing...");
         ResultSet rs = statement.executeQuery();
         rs.next();
         return rs.getInt(1) > 0;
@@ -173,7 +173,7 @@ public class CreateOrUpdateRecord implements Module {
             setStatementParam(statement, i, entry.getKey(), entry.getValue().getAsString());
             i++;
         }
-        logger.trace("{}",statement);
+        logger.info("Prepared a statement. Executing...");
         statement.execute();
     }
 
@@ -191,6 +191,7 @@ public class CreateOrUpdateRecord implements Module {
             i++;
         }
         setStatementParam(statement, i, idColumn, idValue);
+        logger.info("Prepared a statement. Executing...");
         statement.execute();
     }
 }

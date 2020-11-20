@@ -1,25 +1,22 @@
 package io.elastic.jdbc.actions;
 
 import io.elastic.api.ExecutionParameters;
+import io.elastic.api.Function;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
-import io.elastic.jdbc.utils.Engines;
 import io.elastic.jdbc.query_builders.Query;
+import io.elastic.jdbc.utils.Engines;
 import io.elastic.jdbc.utils.QueryFactory;
 import io.elastic.jdbc.utils.Utils;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.json.Json;
-import javax.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class InsertAction implements Module {
+import javax.json.Json;
+import javax.json.JsonObject;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+
+public class InsertAction implements Function {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(InsertAction.class);
 
@@ -34,8 +31,8 @@ public class InsertAction implements Module {
     LOGGER.info("Found dbEngine: '{}'", dbEngine);
     try (Connection connection = Utils.getConnection(configuration)) {
       Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
-      LOGGER.debug("Detected column types: " + Utils.columnTypes);
-      LOGGER.trace("Inserting in table '{}' values '{}'", tableName, body);
+      LOGGER.debug("Detected column types");
+      LOGGER.info("Inserting values in the table");
       QueryFactory queryFactory = new QueryFactory();
       Query query = queryFactory.getQuery(dbEngine);
       query.from(tableName);
@@ -44,7 +41,9 @@ public class InsertAction implements Module {
       if (Utils.reboundIsEnabled(configuration)) {
         List<String> states = Utils.reboundDbState.get(dbEngine);
         if (states.contains(e.getSQLState())) {
-          LOGGER.warn("Starting rebound max iter: {}, rebound ttl: {}. Reason: {}", System.getenv("ELASTICIO_REBOUND_LIMIT"), System.getenv("ELASTICIO_REBOUND_INITIAL_EXPIRATION"), e.getMessage());
+          LOGGER.warn("Starting rebound max iter: {}, rebound ttl: {} because of a SQL Exception",
+              System.getenv("ELASTICIO_REBOUND_LIMIT"),
+              System.getenv("ELASTICIO_REBOUND_INITIAL_EXPIRATION"));
           parameters.getEventEmitter().emitRebound(e);
           return;
         }
@@ -54,7 +53,7 @@ public class InsertAction implements Module {
     JsonObject result = Json.createObjectBuilder()
         .add("result", true)
         .build();
-    LOGGER.trace("Emit data= {}", result);
+    LOGGER.info("Emitting data...");
     parameters.getEventEmitter().emitData(new Message.Builder().body(result).build());
     LOGGER.info("Insert action is successfully executed");
   }

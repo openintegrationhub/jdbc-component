@@ -2,7 +2,7 @@ package io.elastic.jdbc.triggers;
 
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 import io.elastic.jdbc.query_builders.Query;
 import io.elastic.jdbc.utils.QueryFactory;
 import io.elastic.jdbc.utils.Utils;
@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class GetRowsPollingTrigger implements Module {
+public class GetRowsPollingTrigger implements Function {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GetRowsPollingTrigger.class);
   private static final String PROPERTY_TABLE_NAME = "tableName";
@@ -33,7 +33,7 @@ public class GetRowsPollingTrigger implements Module {
     LOGGER.info("About to execute select trigger");
     final JsonObject configuration = parameters.getConfiguration();
     JsonObject snapshot = parameters.getSnapshot();
-    LOGGER.trace("Got snapshot: {}", snapshot.toString());
+    LOGGER.debug("Got snapshot");
     checkConfig(configuration);
     String pollingField = "";
     Calendar cDate = Calendar.getInstance();
@@ -72,8 +72,8 @@ public class GetRowsPollingTrigger implements Module {
       ArrayList<JsonObject> resultList = query.executePolling(connection);
 
       for (int i = 0; i < resultList.size(); i++) {
-        LOGGER.debug("Row number: {} from {}", i + 1, resultList.size());
-        LOGGER.trace("Emitting data {}", resultList.get(i).toString());
+        LOGGER.info("Row number: {} from {}", i + 1, resultList.size());
+        LOGGER.info("Emitting data");
         parameters.getEventEmitter()
             .emitData(new Message.Builder().body(resultList.get(i)).build());
       }
@@ -83,12 +83,11 @@ public class GetRowsPollingTrigger implements Module {
             .add(PROPERTY_TABLE_NAME, tableName)
             .add(PROPERTY_POLLING_FIELD, pollingField)
             .add(PROPERTY_POLLING_VALUE, formattedDate).build();
-        LOGGER.trace("Emitting new snapshot {}", snapshot.toString());
+        LOGGER.info("Emitting new snapshot");
         parameters.getEventEmitter().emitSnapshot(snapshot);
       }
     } catch (SQLException e) {
       LOGGER.error("Failed to make request");
-      LOGGER.trace("Failed to make request, details:", e.toString());
       throw new RuntimeException(e);
     }
   }

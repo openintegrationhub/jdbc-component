@@ -2,7 +2,7 @@ package io.elastic.jdbc.actions;
 
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 import io.elastic.jdbc.query_builders.Query;
 import io.elastic.jdbc.utils.QueryFactory;
 import io.elastic.jdbc.utils.Utils;
@@ -15,7 +15,7 @@ import javax.json.JsonString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SelectAction implements Module {
+public class SelectAction implements Function {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(SelectAction.class);
   private static final String SQL_QUERY_VALUE = "sqlQuery";
@@ -44,20 +44,20 @@ public class SelectAction implements Module {
     }
 
     Utils.columnTypes = Utils.getVariableTypes(sqlQuery);
-    LOGGER.debug("Detected column types: " + Utils.columnTypes);
     LOGGER.info("Executing select action");
+    LOGGER.debug("Detected column types");
     try {
       QueryFactory queryFactory = new QueryFactory();
       Query query = queryFactory.getQuery(dbEngine);
       sqlQuery = Query.preProcessSelect(sqlQuery);
-      LOGGER.trace("SQL Query: {}", sqlQuery);
+      LOGGER.debug("Got SQL Query");
       ArrayList<JsonObject> resultList;
       try(Connection connection = Utils.getConnection(configuration)){
         resultList = query.executeSelectQuery(connection, sqlQuery, body);
       }
       for (int i = 0; i < resultList.size(); i++) {
-        LOGGER.trace("Columns count: {} from {}", i + 1, resultList.size());
-        LOGGER.trace("Emitting data {}", resultList.get(i).toString());
+        LOGGER.debug("Columns count: {} from {}", i + 1, resultList.size());
+        LOGGER.info("Emitting data...");
         parameters.getEventEmitter()
             .emitData(new Message.Builder().body(resultList.get(i)).build());
       }
@@ -66,7 +66,7 @@ public class SelectAction implements Module {
         resultList.add(Json.createObjectBuilder()
             .add("empty dataset", "no data")
             .build());
-        LOGGER.trace("Emitting data {}", resultList.get(0));
+        LOGGER.info("Emitting data...");
         parameters.getEventEmitter()
             .emitData(new Message.Builder().body(resultList.get(0)).build());
       } else if (resultList.size() == 0 && !nullableResult) {
@@ -78,7 +78,7 @@ public class SelectAction implements Module {
           .add(PROPERTY_SKIP_NUMBER, skipNumber + resultList.size())
           .add(SQL_QUERY_VALUE, sqlQuery)
           .add(PROPERTY_NULLABLE_RESULT, nullableResult).build();
-      LOGGER.trace("Emitting new snapshot {}", snapshot.toString());
+      LOGGER.info("Emitting new snapshot");
       parameters.getEventEmitter().emitSnapshot(snapshot);
     } catch (SQLException e) {
       throw new RuntimeException(e);

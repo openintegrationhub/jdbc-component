@@ -2,7 +2,7 @@ package io.elastic.jdbc.actions;
 
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 import io.elastic.jdbc.utils.Utils;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -19,7 +19,7 @@ import javax.json.JsonObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CustomQuery implements Module {
+public class CustomQuery implements Function {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CustomQuery.class);
 
@@ -34,7 +34,6 @@ public class CustomQuery implements Module {
     final String dbEngine = Utils.getDbEngine(configuration);
     final String queryString = body.getString("query");
     LOGGER.info("Found dbEngine: '{}'", dbEngine);
-    LOGGER.trace("Query: '{}'", queryString);
 
     List<Message> messages = new ArrayList<>();
     try (Connection connection = Utils.getConnection(configuration)) {
@@ -67,7 +66,7 @@ public class CustomQuery implements Module {
     }
 
     messages.forEach(message -> {
-      LOGGER.trace("Emit data= {}", message.getBody());
+      LOGGER.trace("Emitting message data");
       parameters.getEventEmitter().emitData(message);
     });
 
