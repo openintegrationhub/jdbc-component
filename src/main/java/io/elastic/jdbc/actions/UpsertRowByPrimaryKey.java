@@ -58,7 +58,8 @@ public class UpsertRowByPrimaryKey implements Function {
     boolean isOracle = dbEngine.equals(Engines.ORACLE.name().toLowerCase());
     Boolean isMysql = configuration.getString("dbEngine").equals("mysql");
 
-    try (Connection connection = Utils.getConnection(configuration)) {
+    try {
+      Connection connection = Utils.getConnection(configuration);
       DatabaseMetaData dbMetaData = connection.getMetaData();
       if (isMysql) {
         catalog = configuration.getString("databaseName");

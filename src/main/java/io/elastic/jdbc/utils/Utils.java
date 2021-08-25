@@ -2,16 +2,7 @@ package io.elastic.jdbc.utils;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.Date;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,6 +38,8 @@ public class Utils {
   private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
   public static Map<String, String> columnTypes = null;
   public static final Map<String, List<String>> reboundDbState;
+  private static Connection con;
+
   static {
     reboundDbState = new HashMap<>();
     reboundDbState.put(Engines.POSTGRESQL.name(), Collections.singletonList("40P01"));
@@ -56,6 +49,10 @@ public class Utils {
   }
 
   public static Connection getConnection(final JsonObject config) throws SQLException {
+    if (con != null) {
+      LOGGER.info("Use connection defined before");
+      return con;
+    }
     final String engine = getRequiredNonEmptyString(config, CFG_DB_ENGINE, "Engine is required")
         .toLowerCase();
     final String host = getRequiredNonEmptyString(config, CFG_HOST, "Host is required");
@@ -67,8 +64,17 @@ public class Utils {
     final String connectionString = engineType.getConnectionString(host, port, databaseName);
     Properties properties = getConfigurationProperties(config, engineType);
     LOGGER.info("Connecting to connection string");
-    return DriverManager.getConnection(connectionString, properties);
+    con = DriverManager.getConnection(connectionString, properties);
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      try {
+        if(!con.isClosed()) con.close();
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }));
+    return con;
   }
+
 
   private static String getPassword(final JsonObject config, final Engines engineType) {
     final String password = getNonNullString(config, CFG_PASSWORD);

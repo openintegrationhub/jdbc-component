@@ -74,7 +74,8 @@ public class LookupRowByPrimaryKey implements Function {
 
     if (primaryKeysCount == 1) {
 
-      try (Connection connection = Utils.getConnection(configuration)) {
+      try {
+        Connection connection = Utils.getConnection(configuration);
         LOGGER.info("Executing lookup row by primary key action");
         Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
         LOGGER.debug("Detected column types");

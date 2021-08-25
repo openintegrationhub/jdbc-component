@@ -63,7 +63,8 @@ public class GetRowsPollingTrigger implements Function {
     }
 
     LOGGER.info("Executing row polling trigger");
-    try (Connection connection = Utils.getConnection(configuration)) {
+    try {
+      Connection connection = Utils.getConnection(configuration);
       QueryFactory queryFactory = new QueryFactory();
       Query query = queryFactory.getQuery(dbEngine);
       query.from(tableName).orderBy(pollingField)

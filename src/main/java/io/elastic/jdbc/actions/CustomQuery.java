@@ -36,7 +36,8 @@ public class CustomQuery implements Function {
     LOGGER.info("Found dbEngine: '{}'", dbEngine);
 
     List<Message> messages = new ArrayList<>();
-    try (Connection connection = Utils.getConnection(configuration)) {
+    try {
+      Connection connection = Utils.getConnection(configuration);
       connection.setAutoCommit(false);
       try (Statement statement = connection.createStatement()) {
         boolean status = statement.execute(queryString);
