@@ -3,11 +3,13 @@ package io.elastic.jdbc.actions;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
 import io.elastic.api.Function;
+import io.elastic.api.ShutdownParameters;
 import io.elastic.jdbc.query_builders.Query;
 import io.elastic.jdbc.utils.QueryFactory;
 import io.elastic.jdbc.utils.Utils;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -15,8 +17,8 @@ import javax.json.JsonString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SelectAction implements Function {
 
+public class SelectAction implements Function {
   private static final Logger LOGGER = LoggerFactory.getLogger(SelectAction.class);
   private static final String SQL_QUERY_VALUE = "sqlQuery";
   private static final String PROPERTY_NULLABLE_RESULT = "nullableResult";
@@ -52,9 +54,8 @@ public class SelectAction implements Function {
       sqlQuery = Query.preProcessSelect(sqlQuery);
       LOGGER.debug("Got SQL Query");
       ArrayList<JsonObject> resultList;
-      try(Connection connection = Utils.getConnection(configuration)){
-        resultList = query.executeSelectQuery(connection, sqlQuery, body);
-      }
+      Connection connection = Utils.getConnection(configuration);
+      resultList = query.executeSelectQuery(connection, sqlQuery, body);
       for (int i = 0; i < resultList.size(); i++) {
         LOGGER.debug("Columns count: {} from {}", i + 1, resultList.size());
         LOGGER.info("Emitting data...");

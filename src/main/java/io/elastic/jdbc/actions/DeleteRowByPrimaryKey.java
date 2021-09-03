@@ -70,7 +70,8 @@ public class DeleteRowByPrimaryKey implements Function {
     }
 
     if (primaryKeysCount == 1) {
-      try (Connection connection = Utils.getConnection(configuration)) {
+      try {
+        Connection connection = Utils.getConnection(configuration);
         LOGGER.info("Executing delete row by primary key action");
         boolean isOracle = dbEngine.equals(Engines.ORACLE.name().toLowerCase());
         Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);

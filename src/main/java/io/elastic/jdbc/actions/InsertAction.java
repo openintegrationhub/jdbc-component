@@ -29,7 +29,8 @@ public class InsertAction implements Function {
     final boolean isOracle = dbEngine.equals(Engines.ORACLE.name().toLowerCase());
     final String tableName = Utils.getTableName(configuration, isOracle);
     LOGGER.info("Found dbEngine: '{}'", dbEngine);
-    try (Connection connection = Utils.getConnection(configuration)) {
+    try {
+      Connection connection = Utils.getConnection(configuration);
       Utils.columnTypes = Utils.getColumnTypes(connection, isOracle, tableName);
       LOGGER.debug("Detected column types");
       LOGGER.info("Inserting values in the table");

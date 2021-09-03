@@ -95,7 +95,8 @@ public class ProcedureFieldsNameProvider implements DynamicMetadataProvider, Sel
   public static List<ProcedureParameter> getProcedureMetadata(JsonObject config) {
     List<ProcedureParameter> parameters = new LinkedList<>();
 
-    try (Connection conn = Utils.getConnection(config)) {
+    try {
+      Connection conn = Utils.getConnection(config);
       DatabaseMetaData dbMetaData = conn.getMetaData();
       ResultSet rs = dbMetaData.getProcedureColumns(conn.getCatalog(),
           config.getString("schemaName"),
