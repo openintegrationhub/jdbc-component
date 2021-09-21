@@ -271,6 +271,7 @@
       "dynamicMetadata": "io.elastic.jdbc.providers.PrimaryColumnNamesProvider"
     },
     "selectAction": {
+      "deprecated": true,
       "main": "io.elastic.jdbc.actions.SelectAction",
       "title": "Select",
       "description": "Executes a SELECT statement that fetches potentially multiple rows from the database",
@@ -285,6 +286,32 @@
         "nullableResult": {
           "label": "Don`t throw Error on an Empty Result",
           "viewClass": "CheckBoxView"
+        }
+      },
+      "dynamicMetadata": "io.elastic.jdbc.providers.QueryColumnNamesProvider"
+    },
+    "newSelectAction": {
+      "main": "io.elastic.jdbc.actions.NewSelectAction",
+      "title": "Select Query",
+      "description": "Executes a SELECT statement that fetches potentially multiple rows from the database",
+      "fields": {
+        "sqlQuery": {
+          "viewClass": "TextAreaView",
+          "label": "SQL Query",
+          "required": true,
+          "placeholder": "SELECT * FROM films WHERE watched = @watched:boolean AND created = @created:date",
+          "note": "You can use parameters of message body as <i>@value:type</i>"
+        },
+        "emitBehaviour": {
+          "label": "Emit Behaviour",
+          "viewClass": "SelectView",
+          "required": false,
+          "prompt": "Default Emit Individually",
+          "model": {
+            "fetchAll": "Fetch All",
+            "emitIndividually": "Emit Individually",
+            "expectSingle": "Expect Single"
+          }
         }
       },
       "dynamicMetadata": "io.elastic.jdbc.providers.QueryColumnNamesProvider"
