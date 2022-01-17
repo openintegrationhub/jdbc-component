@@ -46,7 +46,7 @@ commands:
             			"fields": [
             				{
             					"type": "mrkdwn",
-            					"text": ":tada: *$CIRCLE_PROJECT_REPONAME*:*$CIRCLE_TAG* is built and published"
+            					"text": ":tada: *$CIRCLE_PROJECT_REPONAME*:*$CIRCLE_TAG* was successfully built and published"
             				}
             			]
             		},
