@@ -91,16 +91,21 @@ jobs:
   build:
     docker:
       - image: cimg/base:stable
+        user: root
     steps:
       - checkout
-      - node/install
+      - node/install:
+          node-version: << pipeline.parameters.node-version >>
       - setup_remote_docker:
           version: 19.03.13
           docker_layer_caching: true
       # build and push Docker image
       - run:
+          name: Install component-build-helper lib
+          command: npm install -g @elastic.io/component-build-helper
+      - run:
           name: Build and publish docker image
-          command: .circleci/build_docker.sh
+          command: build_component_docker
       - notify_on_failure
       - notify_on_pass
 
